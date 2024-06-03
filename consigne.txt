@@ -1,13 +1,13 @@
 CONSIGNE 
 
 - tout se passe sur la branche test 
-- la branche main est là quand tout marche sur test, on fait donc un merge de test à main quand et seulement quand on peut mettre en production 
+- la branche main est là quand tout marche sur test, on fait donc un merge et push de test à main quand et seulement quand on peut mettre en production 
 
 - important : on cré des branches à partir de test quand on commence à faire des modifications (codage, news fichiers etc) 
-Quand on considère que ce que l'on a fait est terminé alors on peut merger sur la branche test et supprimer la branche que l'on vient de créé 
+Quand on considère que ce que l'on a fait est terminé alors on peut merger et push sur la branche test et supprimer la branche que l'on vient de créé 
 
 Exemple : je viens de créé une branche consignes pour se fichier
-quands j'aurais terminer je commit sur ma branche puis au final je merge sur test quand j'estime cette branche ne me servira plus je la supprime
+quands j'aurais terminer je commi et push sur ma branche puis au final je merge et push sur test quand j'estime cette branche ne me servira plus je la supprime
 puis je recré une autre branche pour des nouvelles fonctions etc 
 
 NE PAS SUPPRIMER LA BRANCHE TEST 
