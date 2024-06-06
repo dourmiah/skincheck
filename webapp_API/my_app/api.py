@@ -11,7 +11,7 @@ api_base_url = os.getenv('API_BASE_URL')
 
 CORS(api, origins={api_base_url})  # Autorise les requêtes depuis ce domaine
 
-UPLOAD_FOLDER = "images"
+UPLOAD_FOLDER = "src/upluad"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
