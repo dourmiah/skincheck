@@ -17,3 +17,4 @@ __pycache__/
 *.egg-info/
 webapp_API/flaskapitest/.env
 webapp_API/flaskapitest/.env
+webapp_API/my_app/.env

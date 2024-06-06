@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Flask API</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="mt-5">Bienvenue sur Flask API</h1>
+        <p class="lead">Ceci est une page simple utilisant Flask et Bootstrap 5.3.</p>
+    </div>
+
+    <div class="container">
+        <p id="message"></p>
+        <script>
+            const baseUrl = "http://127.0.0.1:5001"; // Ajustez en fonction de votre configuration de développement/production
+            fetch(baseUrl + '/api/greet')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('message').textContent = data.message;
+                });
+        </script>
+    </div>
+
+    <div class="container">
+        <h1>Upload new File</h1>
+        <form id="uploadForm" method="POST" action="http://localhost:5001/api/upload" enctype="multipart/form-data">
+            <input type="file" name="file" />
+            <input type="submit" value="Upload">
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
+</body>
+
+</html>
