@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+import joblib
+import numpy as np
 import os
 
 
@@ -35,6 +37,21 @@ def upload_file():
     f.save(filepath)
     app_base_url = os.getenv("APP_BASE_URL")
     return redirect(f"{app_base_url}/")
+
+model_path = 'src/model/model.pkl'
+
+# Charger le modèle
+model = joblib.load(model_path)
+
+@api.route('/predict', methods=['POST'])
+def predict():
+    try:
+        input_data = request.form['input']
+        X_new = np.array(input_data.split(',')).reshape(1, -1)
+        prediction = model.predict(X_new)
+        return f'Prediction: {int(prediction[0])}'
+    except Exception as e:
+        return str(e)
 
 
 if __name__ == "__main__":

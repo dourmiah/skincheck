@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>My app</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
 </head>
 
@@ -25,11 +25,26 @@
                 </div>
             </form>
         </div>
+        <div>
+            <h2>Make a Prediction</h2>
+            <form id="predictionForm" action="http://localhost:5001/predict" method="POST">
+                <div class="mb-3">
+                    <input name="input" type="text" class="form-control" placeholder="Enter data separated by commas">
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary">Predict</button>
+                </div>
+            </form>
+            <br>
+            <div id="predictionResult"></div>
+        </div>
+    </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+
 </body>
 
 </html>
