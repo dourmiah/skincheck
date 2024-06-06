@@ -1,0 +1,15 @@
+python -m venv mon_env_flask2
+
+mon_env_flask2\Scripts\activate 
+
+deactivate
+
+pip install Flask
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+pip install python-dotenv
+
+pip install -U flask-cors
+
+pip install flask_cors 
