@@ -18,13 +18,13 @@ api_base_url = os.getenv('API_BASE_URL')
 
 CORS(api, origins={api_base_url})  # Autorise les requêtes depuis ce domaine
 
-UPLOAD_FOLDER = "src/upluad"
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-
+UPLOAD_FOLDER = "src/upload"
+MODEL_VERSION = "1.0.0"  # Version du modèle
 model_path = 'src/model/cat_classifier.h5'
 model = load_model(model_path)
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 # Charger le modèle
 @api.route('/api/predict', methods=['POST'])
@@ -46,7 +46,7 @@ def predict():
          # Faire la prédiction
         prediction = model.predict(image)
         prediction_value = prediction[0][0]
-        is_cat = prediction_value > 0.5
+        is_cat = prediction_value <= 0.5
 
         # Afficher les valeurs pour déboguer
         print(f"Prediction value: {prediction_value}")
@@ -60,6 +60,10 @@ def predict():
 
     except Exception as e:
         return str(e), 500
+
+@api.route('/api/model_version', methods=['GET'])
+def model_version():
+    return jsonify({'model_version': MODEL_VERSION})
 
 
 if __name__ == "__main__":
