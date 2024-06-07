@@ -26,14 +26,12 @@
             </form>
         </div>
         <div>
+           
+            <title>Cat Classifier</title>
             <h2>Make a Prediction</h2>
-            <form id="predictionForm" action="http://localhost:5001/predict" method="POST">
-                <div class="mb-3">
-                    <input name="input" type="text" class="form-control" placeholder="Enter data separated by commas">
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-primary">Predict</button>
-                </div>
+            <h3>Upload a picture of a cat or not a cat</h3>
+            <form method=post action="http://localhost:5001/api//predict" enctype=multipart/form-data> <input type=file name=file>
+                <input type=submit value=Upload>
             </form>
             <br>
             <div id="predictionResult"></div>

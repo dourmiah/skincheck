@@ -4,6 +4,11 @@ from werkzeug.utils import secure_filename
 import joblib
 import numpy as np
 import os
+from flask import Flask, request, render_template
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+import numpy as np
+import os
 
 
 api = Flask(__name__)
@@ -38,20 +43,34 @@ def upload_file():
     app_base_url = os.getenv("APP_BASE_URL")
     return redirect(f"{app_base_url}/")
 
-model_path = 'src/model/model.pkl'
+model_path = 'src/model/cat_classifier.h5'
+model = load_model(model_path)
 
 # Charger le modèle
-model = joblib.load(model_path)
-
-@api.route('/predict', methods=['POST'])
+@api.route('/api/predict', methods=['POST'])
 def predict():
     try:
-        input_data = request.form['input']
-        X_new = np.array(input_data.split(',')).reshape(1, -1)
-        prediction = model.predict(X_new)
-        return f'Prediction: {int(prediction[0])}'
+        # Vérifier si le fichier est dans la requête
+        if 'file' not in request.files:
+            return 'No file provided', 400
+
+        file = request.files['file']
+
+        # Prétraiter l'image
+        image = load_img(file, target_size=(224, 224))
+        image = img_to_array(image)
+        image = np.expand_dims(image, axis=0)
+        image = image / 255.0
+
+        # Faire la prédiction
+        prediction = model.predict(image)
+        is_cat = prediction[0][0] > 0.5
+
+        # Retourner la prédiction dans une page HTML
+        return render_template('result.html', is_cat=is_cat)
+
     except Exception as e:
-        return str(e)
+        return str(e), 500
 
 
 if __name__ == "__main__":
