@@ -15,28 +15,18 @@
         <h1 class="mt-5">my app</h1>
         <div>
             <h2>Upload new File</h2>
-            <form id="uploadForm" method="POST" action="http://localhost:5001/api/upload" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <input type="file" name="file" class="form-control" />
-                </div>
-                <br>
+            <form method=post action="http://localhost:5001/api//predict" enctype=multipart/form-data> <div
+                class="mb-3">
+                <input type=file name=file>
+
                 <div>
-                    <input type="submit" value="Upload" class="btn btn-primary" />
+                    <br>
+                    <input type=submit value=Upload class="btn btn-primary">
                 </div>
             </form>
         </div>
-        <div>
-           
-            <title>Cat Classifier</title>
-            <h2>Make a Prediction</h2>
-            <h3>Upload a picture of a cat or not a cat</h3>
-            <form method=post action="http://localhost:5001/api//predict" enctype=multipart/form-data> <input type=file name=file>
-                <input type=submit value=Upload>
-            </form>
-            <br>
-            <div id="predictionResult"></div>
-        </div>
-    </div>
+        <br>
+        <div id="predictionResult"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
