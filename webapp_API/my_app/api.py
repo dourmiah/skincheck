@@ -43,9 +43,14 @@ def predict():
         image = np.expand_dims(image, axis=0)
         image = image / 255.0
 
-        # Faire la prédiction
+         # Faire la prédiction
         prediction = model.predict(image)
-        is_cat = prediction[0][0] > 0.5
+        prediction_value = prediction[0][0]
+        is_cat = prediction_value > 0.5
+
+        # Afficher les valeurs pour déboguer
+        print(f"Prediction value: {prediction_value}")
+        print(f"Is cat: {is_cat}")
 
         # Supprimer l'image après la prédiction
         os.remove(filepath)
