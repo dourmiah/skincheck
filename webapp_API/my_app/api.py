@@ -3,10 +3,8 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import joblib
 import numpy as np
-import os
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
-import numpy as np
 import os
 
 
