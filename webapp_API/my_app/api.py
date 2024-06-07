@@ -1,10 +1,9 @@
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect,render_template, url_for
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import joblib
 import numpy as np
 import os
-from flask import Flask, request, render_template
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 import numpy as np
@@ -62,7 +61,7 @@ def predict():
     except Exception as e:
         return str(e), 500
     
-
+    
  # version
 
 @api.route('/api/model_version', methods=['GET'])
