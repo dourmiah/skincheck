@@ -16,10 +16,11 @@ api = Flask(__name__)
 CORS(api, origins="http://127.0.0.1:5000")  # Autorise les requêtes depuis ce domaine
 api_base_url = os.getenv('API_BASE_URL')
 
-CORS(api, origins={api_base_url})  # Autorise les requêtes depuis ce domaine
 
 UPLOAD_FOLDER = "src/upload"
-MODEL_VERSION = "1.0.0"  # Version du modèle
+MODEL_VERSION = "1.0.0"  
+API_VERSION = "1.0.0"
+
 model_path = 'src/model/cat_classifier.h5'
 model = load_model(model_path)
 
@@ -60,10 +61,17 @@ def predict():
 
     except Exception as e:
         return str(e), 500
+    
+
+ # version
 
 @api.route('/api/model_version', methods=['GET'])
 def model_version():
     return jsonify({'model_version': MODEL_VERSION})
+
+@api.route('/api/version', methods=['GET'])
+def get_api_version():
+    return jsonify({'api_version': API_VERSION})
 
 
 if __name__ == "__main__":
