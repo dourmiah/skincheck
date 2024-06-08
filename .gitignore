@@ -5,3 +5,23 @@ __pycache__/
 *.pyc
 *.pem
 
+# Ignorer l'environnement virtuel
+venv/
+env/
+
+# Ignorer les fichiers de cache Python
+__pycache__/
+*.py[cod]
+
+# Ignorer les fichiers de logs
+*.log
+
+# Ignorer les fichiers de configuration spécifiques à l'IDE
+.vscode/
+.idea/
+
+# Ignorer les fichiers de dépendances
+*.egg-info/
+webapp_API/flaskapitest/.env
+webapp_API/flaskapitest/.env
+webapp_API/my_app/.env
