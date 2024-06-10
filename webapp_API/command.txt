@@ -1,6 +1,6 @@
 python -m venv mon_env_flask2
 
-mon_env_flask2\Scripts\activate 
+env\Scripts\activate 
 
 deactivate
 
