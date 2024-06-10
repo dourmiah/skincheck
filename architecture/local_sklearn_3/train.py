@@ -93,7 +93,7 @@ class ModelTrainer:
     def log_model(self, model, signature):
         mlflow.sklearn.log_model(
             sk_model=model,
-            artifact_path=k_RelativePaths,
+            artifact_path=k_RelativePath,
             registered_model_name="random_forest",
             signature=signature,
         )
