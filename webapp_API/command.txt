@@ -19,3 +19,6 @@ pip install tensorflow pillow
 pip install tensorflow  
 
 pip install tensorflow==2.16.1
+
+pip install joblib
+
