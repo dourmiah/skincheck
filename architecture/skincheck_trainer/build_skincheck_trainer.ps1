@@ -1,0 +1,1 @@
+docker build -t skincheck_trainer .

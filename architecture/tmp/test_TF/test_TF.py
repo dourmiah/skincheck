@@ -1,10 +1,16 @@
+# F5 dans VSCode
+# Choisir l'option qui permet de passer des paramètres
+# Passer au pif : --epochs 5 --batch_size 1000
+
 import sys
 import argparse
 import pandas as pd
 import time
-import mlflow
+
+# import mlflow
 import tensorflow as tf
-from mlflow.models.signature import infer_signature
+
+# from mlflow.models.signature import infer_signature
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -16,7 +22,7 @@ if __name__ == "__main__":
 
     print("OS                   : ", sys.platform)
     print("Python version       : ", sys.version.split("|")[0])
-    print("mlflow version       : ", mlflow.__version__)
+    # print("mlflow version       : ", mlflow.__version__)
     print("TensorFlow version   : ", tf.__version__)
     print()
 
@@ -58,28 +64,15 @@ if __name__ == "__main__":
 
     model.compile(optimizer="adam", loss="mse")
 
-    # Log experiment to MLFlow
-    with mlflow.start_run():
-        # Training
-        model.fit(
-            X_train_scaled,
-            y_train,
-            epochs=epochs,
-            batch_size=batch_size,
-            validation_split=0.2,
-        )
-
-        # Evaluation
-        loss = model.evaluate(X_test_scaled, y_test)
-        print(f"Test Loss: {loss}")
-
-        # Log model separately to have more flexibility on setup
-        mlflow.keras.log_model(
-            keras_model=model,
-            artifact_path="modeling_housing_market",
-            registered_model_name="keras_sequential",
-            signature=infer_signature(X_train_scaled, model.predict(X_train_scaled)),
-        )
+    model.fit(
+        X_train_scaled,
+        y_train,
+        epochs=epochs,
+        batch_size=batch_size,
+        validation_split=0.2,
+    )
+    loss = model.evaluate(X_test_scaled, y_test)
+    print(f"Test Loss: {loss}")
 
     print(f"Training finished    :")
     print(f"Training time        : {(time.time()-start_time):.3f} sec.")
