@@ -15,6 +15,5 @@ __pycache__/
 
 # Ignorer les fichiers de dépendances
 *.egg-info/
-webapp_API/flaskapitest/.env
-webapp_API/flaskapitest/.env
+
 webapp_API/my_app/.env
