@@ -1,4 +1,5 @@
 secrets.ps1
+*.pem
 secrets.sh
 
 __pycache__/
@@ -25,3 +26,5 @@ __pycache__/
 webapp_API/flaskapitest/.env
 webapp_API/flaskapitest/.env
 webapp_API/my_app/.env
+
+photos_test/
