@@ -7,12 +7,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 import os
 
-
 api = Flask(__name__)
-
-CORS(api, origins="http://127.0.0.1:5000")  # Autorise les requêtes depuis ce domaine
-api_base_url = os.getenv('API_BASE_URL')
-
 
 UPLOAD_FOLDER = "src/upload"
 MODEL_VERSION = "1.0.0"  
@@ -52,9 +47,12 @@ def predict():
 
         # Supprimer l'image après la prédiction
         os.remove(filepath)
+        
+        # Obtenir la base URL depuis les variables d'environnement
+        base_url = os.getenv('APP_URL')
 
         # Retourner la prédiction dans une page HTML
-        return render_template('result.html', is_cat=is_cat)
+        return render_template('result.html', is_cat=is_cat, base_url=base_url)
 
     except Exception as e:
         return str(e), 500

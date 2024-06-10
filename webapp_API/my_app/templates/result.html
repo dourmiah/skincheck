@@ -14,8 +14,7 @@
     <div class="container mt-5">
         <h1>Prediction Result</h1>
         <p>The image is {{ 'a cat' if is_cat else 'not a cat' }}.</p>
-        <a href="http://localhost:5000/" class="btn btn-primary">Upload Another Image</a>
-
+        <a href="{{ base_url }}" class="btn btn-primary">Upload Another Image</a>
     </div>
 </body>
 

@@ -15,13 +15,13 @@
         <h1 class="mt-5">SkinCheck</h1>
         <div>
             <h2>Upload new File</h2>
-            <form method=post action="http://localhost:5001/api//predict" enctype=multipart/form-data> <div
-                class="mb-3">
-                <input type=file name=file>
-
+            <form method="post" action="{{ api_url }}/api/predict" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" name="file">
+                </div>
                 <div>
                     <br>
-                    <input type=submit value=Upload class="btn btn-primary">
+                    <input type="submit" value="Upload" class="btn btn-primary">
                 </div>
             </form>
         </div>
