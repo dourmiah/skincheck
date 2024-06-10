@@ -26,10 +26,10 @@ Il y a 4 fichiers
     * Il est très important que secrets.ps1 soit dans le .gitignore
 * train.py
     * C'est le code qui 
-        * Va chercher si besoin les données sur le busket S3 
+        * Va chercher si besoin les données sur le bucket S3 
             * Attention à ne pas abuser. C'est philippe qui paie. 
         * Entraine le modele
-        * Chrnometre chaque étape
+        * Chronometre chaque étape
         * Sauve les artifacts sur S3 ainsi que les paramatres et les chronos sur le serveur mlflow tracking
 1. Ouvrir une console
 1. Saisir la commande : ./run_experiment.ps1
@@ -39,6 +39,7 @@ Il y a 4 fichiers
 
 # Modifier le template pour entrainer votre modèle, enregistrer ses artifacts et ses paramètres
 1. Copier coller le répertoire : architecture\TF_local_2
+1. On a plus besoin de reconstruire une image faut juste se concentrer sur le code d'entrainement
 1. Ourir MLproject
     * Adapter le "name", mettre "skincheck" (plutôt que californian_housing_market) 
     * Modifier peut être les valeurs et/ou quantitites des paramètres

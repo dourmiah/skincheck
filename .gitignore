@@ -1,8 +1,8 @@
 secrets.ps1
 secrets.sh
+*.pem
 
 __pycache__/
 *.pyc
-*.pem
 
 photos_test/
