@@ -7,6 +7,10 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 import mlflow
 import mlflow.keras
+import boto3
+
+# Utilisez le client S3 pour accéder au bucket S3
+s3 = boto3.client('s3')
 
 # Définir les chemins
 train_dir = 'data/train'
