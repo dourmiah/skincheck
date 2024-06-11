@@ -16,21 +16,13 @@ MODEL_RUN_ID = "495bc520d5ff42039590cc8038977981"
 classes = ['chat', 'pas un chat']
 
 # Assurez-vous que le dossier d'images existe
-UPLOAD_FOLDER = 'images'
+UPLOAD_FOLDER = 'src/upload'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # Fonction pour télécharger et charger le modèle depuis une exécution MLflow
 def get_model_from_mlflow(run_id):
-    """
-    Fonction pour télécharger un modèle depuis une exécution MLflow.
-
-    Args:
-        run_id (str): L'ID de l'exécution MLflow.
-
-    Returns:
-        tensorflow.keras.Model: Le modèle chargé.
-    """
+ 
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     artifact_uri = f"runs:/{run_id}/model"  # Spécifiez le chemin relatif du modèle
     model = mlflow.keras.load_model(artifact_uri)
@@ -41,15 +33,7 @@ model = get_model_from_mlflow(MODEL_RUN_ID)
 
 # Fonction de prédiction
 def predict(image_path):
-    """
-    Fonction pour prédire la classe d'une image.
-
-    Args:
-        image_path (str): Le chemin d'accès à l'image.
-
-    Returns:
-        str: La classe prédite pour l'image.
-    """
+ 
     # Prétraitement de l'image
     img = image.load_img(image_path, target_size=(224, 224))
     img = image.img_to_array(img)
@@ -60,22 +44,11 @@ def predict(image_path):
     prediction = model.predict(img)
     predicted_class = classes[np.argmax(prediction[0][0])]
     
-    
      # Faire la prédiction
-    predicted_class <= 0.5
     return predicted_class
 
 # Fonction pour traiter une requête d'envoi d'image
 def new_predict(request):
-    """
-    Fonction pour traiter une requête d'envoi d'image et générer un résultat.
-
-    Args:
-        request (flask.Request): La requête HTTP.
-
-    Returns:
-        flask.Response: La réponse JSON avec le résultat.
-    """
     try:
         # Récupérer l'image envoyée
         if 'file' not in request.files:
@@ -86,7 +59,7 @@ def new_predict(request):
             return jsonify({'error': 'Nom de fichier invalide'}), 400
 
         # Enregistrer l'image temporairement
-        image_path = os.path.join('images', secure_filename(file.filename))
+        image_path = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
         file.save(image_path)
 
         # Prédire la classe de l'image
@@ -94,6 +67,8 @@ def new_predict(request):
 
         # Supprimer l'image temporaire
         os.remove(image_path)
+        
+        print(f"Image supprimée : {image_path}")
 
         # Générer la réponse JSON
         result = {'classe': predicted_class}
@@ -115,7 +90,6 @@ def predict_image():
 # Route pour afficher le résultat
 @api.route('/result')
 def show_result():
-
 
     predicted_class = request.args['classe']
     is_cat = predicted_class == 'chat'
