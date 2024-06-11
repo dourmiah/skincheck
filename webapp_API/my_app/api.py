@@ -121,7 +121,8 @@ def show_result():
         return redirect(url_for('index'))
 
     predicted_class = request.args['classe']
-    return render_template('result.html', classe=predicted_class)
+    is_cat = predicted_class == 'chat'
+    return render_template('result.html', is_cat=is_cat, base_url=url_for('index'))
 
 if __name__ == "__main__":
     api.run(port=5001, debug=True)
