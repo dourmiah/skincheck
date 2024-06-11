@@ -1,0 +1,24 @@
+python -m venv mon_env_flask2
+
+env\Scripts\activate 
+
+deactivate
+
+pip install Flask
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+pip install python-dotenv
+
+pip install -U flask-cors
+
+pip install flask_cors 
+
+pip install tensorflow pillow
+
+pip install tensorflow  
+
+pip install tensorflow==2.16.1
+
+pip install joblib
+
