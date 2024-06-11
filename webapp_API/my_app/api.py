@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 
-app = Flask(__name__)
+api = Flask(__name__)
 
 # Configuration de MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
@@ -14,6 +14,11 @@ MODEL_RUN_ID = "495bc520d5ff42039590cc8038977981"
 
 # Définition des classes
 classes = ['chat', 'pas un chat']
+
+# Assurez-vous que le dossier d'images existe
+UPLOAD_FOLDER = 'images'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 # Fonction pour télécharger et charger le modèle depuis une exécution MLflow
 def get_model_from_mlflow(run_id):
@@ -96,12 +101,15 @@ def new_predict(request):
         return jsonify({'error': 'Une erreur est survenue'}), 500
 
 # Route pour l'envoi d'une image
-@app.route('/api/predict', methods=['POST'])
+@api.route('/api/predict', methods=['POST'])
 def predict_image():
-    return new_predict(request)
+    predicted_class = new_predict(request)
+    if predicted_class is None:
+        return jsonify({'error': 'Une erreur est survenue'}), 500
+    return redirect(url_for('show_result', classe=predicted_class))
 
 # Route pour afficher le résultat
-@app.route('/result')
+@api.route('/result')
 def show_result():
     """
     Fonction pour afficher le résultat de la prédiction.
@@ -115,5 +123,5 @@ def show_result():
     predicted_class = request.args['classe']
     return render_template('result.html', classe=predicted_class)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    api.run(port=5001, debug=True)
