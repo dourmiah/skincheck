@@ -58,7 +58,11 @@ def predict(image_path):
 
     # Prédiction
     prediction = model.predict(img)
-    predicted_class = classes[np.argmax(prediction[0])]
+    predicted_class = classes[np.argmax(prediction[0][0])]
+    
+    
+     # Faire la prédiction
+    predicted_class <= 0.5
     return predicted_class
 
 # Fonction pour traiter une requête d'envoi d'image
