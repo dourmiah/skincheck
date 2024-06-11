@@ -111,18 +111,11 @@ def predict_image():
 # Route pour afficher le résultat
 @api.route('/result')
 def show_result():
-    """
-    Fonction pour afficher le résultat de la prédiction.
 
-    Returns:
-        flask.Response: La page HTML avec le résultat.
-    """
-    if 'classe' not in request.args:
-        return redirect(url_for('index'))
 
     predicted_class = request.args['classe']
     is_cat = predicted_class == 'chat'
-    return render_template('result.html', is_cat=is_cat, base_url=url_for('index'))
+    return render_template('result.html', is_cat=is_cat)
 
 if __name__ == "__main__":
     api.run(port=5001, debug=True)
