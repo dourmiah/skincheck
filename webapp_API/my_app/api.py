@@ -1,128 +1,119 @@
-from flask import Flask, request, jsonify, redirect,render_template, url_for
-from flask_cors import CORS
-from werkzeug.utils import secure_filename
-import joblib
-import numpy as np
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import img_to_array, load_img
 import os
+import numpy as np
 import mlflow
+from flask import Flask, request, jsonify, render_template, redirect, url_for
+from werkzeug.utils import secure_filename
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
 
-api = Flask(__name__)
-
-UPLOAD_FOLDER = "src/upload"
-MODEL_VERSION = "1.0.0"  
-API_VERSION = "1.0.0"
-
+app = Flask(__name__)
 
 # Configuration de MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
-MODEL_ID = "68cd90d6d263450597f5ea00c9d27323"
+MODEL_RUN_ID = "495bc520d5ff42039590cc8038977981"
 
-#SECTION POUR LE MODEL DE CLASSIFICATION 
-# (aucunne connexion avec mlflow pour le moment)
-model_path = 'src/model/cat_classifier.h5'
-model = load_model(model_path)
+# Définition des classes
+classes = ['chat', 'pas un chat']
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# Fonction pour télécharger et charger le modèle depuis une exécution MLflow
+def get_model_from_mlflow(run_id):
+    """
+    Fonction pour télécharger un modèle depuis une exécution MLflow.
 
-# Charger le modèle
-@api.route('/api/predict', methods=['POST'])
-def predict():
+    Args:
+        run_id (str): L'ID de l'exécution MLflow.
+
+    Returns:
+        tensorflow.keras.Model: Le modèle chargé.
+    """
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    artifact_uri = f"runs:/{run_id}/model"  # Spécifiez le chemin relatif du modèle
+    model = mlflow.keras.load_model(artifact_uri)
+    return model
+
+# Chargement du modèle
+model = get_model_from_mlflow(MODEL_RUN_ID)
+
+# Fonction de prédiction
+def predict(image_path):
+    """
+    Fonction pour prédire la classe d'une image.
+
+    Args:
+        image_path (str): Le chemin d'accès à l'image.
+
+    Returns:
+        str: La classe prédite pour l'image.
+    """
+    # Prétraitement de l'image
+    img = image.load_img(image_path, target_size=(224, 224))
+    img = image.img_to_array(img)
+    img = np.expand_dims(img, axis=0)
+    img = img.astype('float32') / 255.0
+
+    # Prédiction
+    prediction = model.predict(img)
+    predicted_class = classes[np.argmax(prediction[0])]
+    return predicted_class
+
+# Fonction pour traiter une requête d'envoi d'image
+def new_predict(request):
+    """
+    Fonction pour traiter une requête d'envoi d'image et générer un résultat.
+
+    Args:
+        request (flask.Request): La requête HTTP.
+
+    Returns:
+        flask.Response: La réponse JSON avec le résultat.
+    """
     try:
+        # Récupérer l'image envoyée
         if 'file' not in request.files:
-            return jsonify({'error': 'No file provided'}), 400
+            return jsonify({'error': 'Aucune image envoyée'}), 400
 
         file = request.files['file']
-        filepath = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
-        file.save(filepath)
+        if file.filename == '':
+            return jsonify({'error': 'Nom de fichier invalide'}), 400
 
-        # Prétraiter l'image
-        image = load_img(filepath, target_size=(224, 224))
-        image = img_to_array(image)
-        image = np.expand_dims(image, axis=0)
-        image = image / 255.0
+        # Enregistrer l'image temporairement
+        image_path = os.path.join('images', secure_filename(file.filename))
+        file.save(image_path)
 
-         # Faire la prédiction
-        prediction = model.predict(image)
-        prediction_value = prediction[0][0]
-        is_cat = prediction_value <= 0.5
+        # Prédire la classe de l'image
+        predicted_class = predict(image_path)
 
-        # Afficher les valeurs pour déboguer
-        print(f"Prediction value: {prediction_value}")
-        print(f"Is cat: {is_cat}")
+        # Supprimer l'image temporaire
+        os.remove(image_path)
 
-        # Supprimer l'image après la prédiction
-        os.remove(filepath)
-        
-        # Obtenir la base URL depuis les variables d'environnement
-        base_url = os.getenv('APP_URL')
-
-        # Retourner la prédiction dans une page HTML
-        return render_template('result.html', is_cat=is_cat, base_url=base_url)
+        # Générer la réponse JSON
+        result = {'classe': predicted_class}
+        return jsonify(result)
 
     except Exception as e:
-        return str(e), 500
+        # Gérer les erreurs
+        print(f"Erreur lors de la prédiction : {e}")
+        return jsonify({'error': 'Une erreur est survenue'}), 500
 
+# Route pour l'envoi d'une image
+@app.route('/api/predict', methods=['POST'])
+def predict_image():
+    return new_predict(request)
 
+# Route pour afficher le résultat
+@app.route('/result')
+def show_result():
+    """
+    Fonction pour afficher le résultat de la prédiction.
 
-#SECTION POUR LE MODEL DE TEST
-#TEST : Récupère les détails du meilleur modèle depuis MLflow hébergé sur Heroku 
+    Returns:
+        flask.Response: La page HTML avec le résultat.
+    """
+    if 'classe' not in request.args:
+        return redirect(url_for('index'))
 
-import mlflow
+    predicted_class = request.args['classe']
+    return render_template('result.html', classe=predicted_class)
 
-def get_best_model_metrics_from_heroku_mlflow(best_model_run_id):
-
-
-  mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-
-  # Obtenir l'objet d'exécution pour le meilleur modèle
-  best_run = mlflow.get_run(run_id=best_model_run_id)
-  
-  # Extraire les métriques pertinentes de l'objet d'exécution
-  metrics = {
-    "training_precision_score": best_run.data.metrics.get("training_precision_score"),
-    "training_recall_score": best_run.data.metrics.get("training_recall_score"),
-    # ... ajouter d'autres métriques dont vous avez besoin
-  }
-
-  return metrics
-
-def new_predict(request):
-
-  try:
-    # Récupérer les détails du meilleur modèle depuis Heroku MLflow (les détails de l'implémentation dépendent de votre configuration)
-    # Remplacer avec votre logique spécifique pour récupérer le meilleur modèle depuis Heroku MLflow
-    best_model_run_id = MODEL_ID  
-    best_model_metrics = get_best_model_metrics_from_heroku_mlflow(best_model_run_id)
-
-    # Renvoyer les métriques du meilleur modèle dans une réponse JSON
-    return jsonify(best_model_metrics)
-
-  except Exception as e:
-    # Gérer les erreurs de manière élégante, par exemple, enregistrer l'erreur et renvoyer un message d'erreur JSON
-    print(f"Erreur lors de la récupération des meilleurs résultats du modèle : {e}")
-    return jsonify({'error': 'Une erreur est survenue lors de la récupération des résultats du modèle'}), 500
-
-@api.route('/api/best_result', methods=['GET'])
-def best_result():
-
-  return new_predict(request)
-
- 
- 
- 
- # version
-
-@api.route('/api/model_version', methods=['GET'])
-def model_version():
-    return jsonify({'model_version': MODEL_VERSION})
-
-@api.route('/api/version', methods=['GET'])
-def get_api_version():
-    return jsonify({'api_version': API_VERSION})
-
-
-if __name__ == "__main__":
-    api.run(port=5001, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
