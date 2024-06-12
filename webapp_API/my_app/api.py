@@ -12,10 +12,10 @@ api = Flask(__name__)
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
 MODEL_RUN_ID = "495bc520d5ff42039590cc8038977981"
 
-# Définition des classes
-classes = ['chat', 'pas un chat']
 
-# Assurez-vous que le dossier d'images existe
+classes = ['malade', 'pas malade']
+
+
 UPLOAD_FOLDER = 'src/upload'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -40,12 +40,16 @@ def predict(image_path):
     img = np.expand_dims(img, axis=0)
     img = img.astype('float32') / 255.0
 
-    # Prédiction
+    # Prediction
     prediction = model.predict(img)
-    predicted_class = classes[np.argmax(prediction[0][0])]
-    
-     # Faire la prédiction
-    return predicted_class
+    probability = prediction[0][0]  
+    is_sick  = probability > 0.5  
+
+    predicted_class = classes[1] if not is_sick  else classes[0]  # If not cat, set to 'pas un chat'
+
+    print(f"Probability: {probability}")
+
+    return predicted_class, float(probability), bool(is_sick )
 
 # Fonction pour traiter une requête d'envoi d'image
 def new_predict(request):
@@ -63,37 +67,54 @@ def new_predict(request):
         file.save(image_path)
 
         # Prédire la classe de l'image
-        predicted_class = predict(image_path)
+        predicted_class, probability, is_sick = predict(image_path)
 
         # Supprimer l'image temporaire
         os.remove(image_path)
         
         print(f"Image supprimée : {image_path}")
 
-        # Générer la réponse JSON
-        result = {'classe': predicted_class}
-        return jsonify(result)
+        # Retourner la classe prédite et la probabilité associée
+        return {'classe': predicted_class, 'probabilité': probability, 'est_malade': is_sick}
 
     except Exception as e:
-        # Gérer les erreurs
+        
         print(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': 'Une erreur est survenue'}), 500
 
 # Route pour l'envoi d'une image
 @api.route('/api/predict', methods=['POST'])
 def predict_image():
-    predicted_class = new_predict(request)
-    if predicted_class is None:
-        return jsonify({'error': 'Une erreur est survenue'}), 500
-    return redirect(url_for('show_result', classe=predicted_class))
+    try:
+        predicted_result = new_predict(request)
+        if 'error' in predicted_result:
+            return jsonify(predicted_result), 500
+        return redirect(url_for('show_result', classe=predicted_result['classe'], probability=predicted_result['probabilité'], is_sick=predicted_result['est_un_chat']))
+    except Exception as e:
+        return jsonify({'error': f'Une erreur est survenue : {e}'}), 500
 
 # Route pour afficher le résultat
 @api.route('/result')
 def show_result():
+    predicted_class = request.args.get('classe')
+    probability = float(request.args.get('probability'))
+    is_sick = request.args.get('is_sick') == 'True'
+    return render_template('result.html', is_sick=is_sick, probability=probability)
 
-    predicted_class = request.args['classe']
-    is_cat = predicted_class == 'chat'
-    return render_template('result.html', is_cat=is_cat)
+
+# Fonction pour obtenir la version du modèle
+def get_model_version(run_id):
+    client = mlflow.tracking.MlflowClient()
+    run = client.get_run(run_id)
+    return run.info.version if hasattr(run.info, 'version') else "unknown"
+
+@api.route('/api/model_version', methods=['GET'])
+def get_model_version_route():
+    try:
+        version = get_model_version(MODEL_RUN_ID)
+        return jsonify({'model_version': version})
+    except Exception as e:
+        return jsonify({'error': f'Une erreur est survenue : {e}'}), 500
 
 if __name__ == "__main__":
     api.run(port=5001, debug=True)
