@@ -13,7 +13,7 @@ MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
 MODEL_RUN_ID = "495bc520d5ff42039590cc8038977981"
 
 # Définition des classes
-classes = ['chat', 'pas un chat']
+classes = ['malade', 'pas malade']
 
 # Assurez-vous que le dossier d'images existe
 UPLOAD_FOLDER = 'src/upload'
@@ -67,7 +67,7 @@ def new_predict(request):
         file.save(image_path)
 
         # Prédire la classe de l'image
-        predicted_class, probability, is_cat = predict(image_path)
+        predicted_class, probability, is_sick = predict(image_path)
 
         # Supprimer l'image temporaire
         os.remove(image_path)
@@ -75,7 +75,7 @@ def new_predict(request):
         print(f"Image supprimée : {image_path}")
 
         # Retourner la classe prédite et la probabilité associée
-        return {'classe': predicted_class, 'probabilité': probability, 'est_un_chat': is_cat}
+        return {'classe': predicted_class, 'probabilité': probability, 'est_un_chat': is_sick}
 
     except Exception as e:
         # Gérer les erreurs
@@ -89,7 +89,7 @@ def predict_image():
         predicted_result = new_predict(request)
         if 'error' in predicted_result:
             return jsonify(predicted_result), 500
-        return redirect(url_for('show_result', classe=predicted_result['classe'], probability=predicted_result['probabilité'], is_cat=predicted_result['est_un_chat']))
+        return redirect(url_for('show_result', classe=predicted_result['classe'], probability=predicted_result['probabilité'], is_sick=predicted_result['est_un_chat']))
     except Exception as e:
         return jsonify({'error': f'Une erreur est survenue : {e}'}), 500
 
@@ -98,8 +98,8 @@ def predict_image():
 def show_result():
     predicted_class = request.args.get('classe')
     probability = float(request.args.get('probability'))
-    is_cat = request.args.get('is_cat') == 'True'
-    return render_template('result.html', is_cat=is_cat, probability=probability)
+    is_sick = request.args.get('is_sick') == 'True'
+    return render_template('result.html', is_sick=is_sick, probability=probability)
 
 
 # Fonction pour obtenir la version du modèle
