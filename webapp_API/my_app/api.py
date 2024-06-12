@@ -3,37 +3,40 @@ import numpy as np
 import mlflow
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 from werkzeug.utils import secure_filename
-from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
+import json
 
 api = Flask(__name__)
 
 # Configuration de MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
-MODEL_RUN_ID = "495bc520d5ff42039590cc8038977981"
-
-
-classes = ['malade', 'pas malade']
-
+MODEL_RUN_ID = "638e83f4b2cf4bda9f9243c1a8eec17e"
 
 UPLOAD_FOLDER = 'src/upload'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Fonction pour télécharger et charger le modèle depuis une exécution MLflow
-def get_model_from_mlflow(run_id):
- 
+# Fonction pour télécharger et charger le modèle et les classes depuis une exécution MLflow
+def get_model_and_classes_from_mlflow(run_id):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-    artifact_uri = f"runs:/{run_id}/model"  # Spécifiez le chemin relatif du modèle
+    artifact_uri = f"runs:/{run_id}/model"
     model = mlflow.keras.load_model(artifact_uri)
-    return model
 
-# Chargement du modèle
-model = get_model_from_mlflow(MODEL_RUN_ID)
+    # Télécharger les artefacts
+    artifacts_path = mlflow.artifacts.download_artifacts(run_id=run_id)
+    classes_file_path = os.path.join(artifacts_path, "classes.json")
+
+    # Charger les classes depuis le fichier JSON
+    with open(classes_file_path, 'r') as f:
+        classes = json.load(f)
+
+    return model, classes
+
+# Chargement du modèle et des classes
+model, classes = get_model_and_classes_from_mlflow(MODEL_RUN_ID)
 
 # Fonction de prédiction
 def predict(image_path):
- 
     # Prétraitement de l'image
     img = image.load_img(image_path, target_size=(224, 224))
     img = image.img_to_array(img)
@@ -42,14 +45,12 @@ def predict(image_path):
 
     # Prediction
     prediction = model.predict(img)
-    probability = prediction[0][0]  
-    is_sick  = probability > 0.5  
+    predicted_index = np.argmax(prediction, axis=1)[0]
+    predicted_class = classes[predicted_index]  # Remplacer la ligne fautive
+    probability = prediction[0][predicted_index]
 
-    predicted_class = classes[1] if not is_sick  else classes[0]  # If not cat, set to 'pas un chat'
 
-    print(f"Probability: {probability}")
-
-    return predicted_class, float(probability), bool(is_sick )
+    return predicted_class, float(probability)
 
 # Fonction pour traiter une requête d'envoi d'image
 def new_predict(request):
@@ -67,7 +68,7 @@ def new_predict(request):
         file.save(image_path)
 
         # Prédire la classe de l'image
-        predicted_class, probability, is_sick = predict(image_path)
+        predicted_class, probability = predict(image_path)
 
         # Supprimer l'image temporaire
         os.remove(image_path)
@@ -75,10 +76,10 @@ def new_predict(request):
         print(f"Image supprimée : {image_path}")
 
         # Retourner la classe prédite et la probabilité associée
-        return {'classe': predicted_class, 'probabilité': probability, 'est_malade': is_sick}
+        return {'classe': predicted_class, 'probabilite': probability}
 
     except Exception as e:
-        
+        # Gérer les erreurs
         print(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': 'Une erreur est survenue'}), 500
 
@@ -89,7 +90,7 @@ def predict_image():
         predicted_result = new_predict(request)
         if 'error' in predicted_result:
             return jsonify(predicted_result), 500
-        return redirect(url_for('show_result', classe=predicted_result['classe'], probability=predicted_result['probabilité'], is_sick=predicted_result['est_un_chat']))
+        return redirect(url_for('show_result', classe=predicted_result['classe'], probabilite=predicted_result['probabilite']))
     except Exception as e:
         return jsonify({'error': f'Une erreur est survenue : {e}'}), 500
 
@@ -97,10 +98,8 @@ def predict_image():
 @api.route('/result')
 def show_result():
     predicted_class = request.args.get('classe')
-    probability = float(request.args.get('probability'))
-    is_sick = request.args.get('is_sick') == 'True'
-    return render_template('result.html', is_sick=is_sick, probability=probability)
-
+    probability = float(request.args.get('probabilite'))
+    return render_template('result.html', classe=predicted_class, probability=probability)
 
 # Fonction pour obtenir la version du modèle
 def get_model_version(run_id):
