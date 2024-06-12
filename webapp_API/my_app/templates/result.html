@@ -16,7 +16,7 @@
         <p>The skin is {{ 'sick' if is_cat else 'not sick' }} <br>
             <br>
             with a probability of : <br>
-            {{ probability }}.</p>
+            {{ (probability * 100) | round(2) }}%.</p>
     </div>
 </body>
 
