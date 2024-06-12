@@ -13,8 +13,10 @@
 <body>
     <div class="container mt-5">
         <h1>Prediction Result</h1>
-        <p>The image is {{ 'a cat' if is_cat else 'not a cat' }}.</p>
-        <a href="{{ base_url }}" class="btn btn-primary">Upload Another Image</a>
+        <p>The image is {{ 'a cat' if is_cat else 'not a cat' }} <br>
+            <br>
+            with a probability of : <br>
+            {{ probability }}.</p>
     </div>
 </body>
 
