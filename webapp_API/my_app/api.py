@@ -12,10 +12,10 @@ api = Flask(__name__)
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
 MODEL_RUN_ID = "495bc520d5ff42039590cc8038977981"
 
-# Définition des classes
+
 classes = ['malade', 'pas malade']
 
-# Assurez-vous que le dossier d'images existe
+
 UPLOAD_FOLDER = 'src/upload'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -42,14 +42,14 @@ def predict(image_path):
 
     # Prediction
     prediction = model.predict(img)
-    probability = prediction[0][0]  # Get probability for positive class
-    is_cat = probability > 0.5  # Apply threshold
+    probability = prediction[0][0]  
+    is_sick  = probability > 0.5  
 
-    predicted_class = classes[1] if not is_cat else classes[0]  # If not cat, set to 'pas un chat'
+    predicted_class = classes[1] if not is_sick  else classes[0]  # If not cat, set to 'pas un chat'
 
     print(f"Probability: {probability}")
 
-    return predicted_class, float(probability), bool(is_cat)
+    return predicted_class, float(probability), bool(is_sick )
 
 # Fonction pour traiter une requête d'envoi d'image
 def new_predict(request):
@@ -75,10 +75,10 @@ def new_predict(request):
         print(f"Image supprimée : {image_path}")
 
         # Retourner la classe prédite et la probabilité associée
-        return {'classe': predicted_class, 'probabilité': probability, 'est_un_chat': is_sick}
+        return {'classe': predicted_class, 'probabilité': probability, 'est_malade': is_sick}
 
     except Exception as e:
-        # Gérer les erreurs
+        
         print(f"Erreur lors de la prédiction : {e}")
         return jsonify({'error': 'Une erreur est survenue'}), 500
 
