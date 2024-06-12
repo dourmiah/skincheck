@@ -97,7 +97,7 @@ def predict_image():
 @api.route('/result')
 def show_result():
     predicted_class = request.args.get('classe')
-    probability = request.args.get('probability')
+    probability = float(request.args.get('probability'))
     is_cat = request.args.get('is_cat') == 'True'
     return render_template('result.html', is_cat=is_cat, probability=probability)
 
