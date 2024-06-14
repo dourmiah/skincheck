@@ -10,7 +10,7 @@ api = Flask(__name__)
 
 # Configuration de MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
-MODEL_RUN_ID = "6992559309214ccf94c85c294d9042aa"
+MODEL_RUN_ID = "1ae00ab9093b48d8ba17690ed193e157"
 
 UPLOAD_FOLDER = 'src/upload'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -55,9 +55,11 @@ def predict(image_path):
     prediction = model.predict(img)
     predicted_index = np.argmax(prediction, axis=1)[0]
     print("MMMMMMMMMMMMMMMMMMMMMM")
+    print(f"text: {image_path}")
     print('prediction :', prediction)
     print('predicted_index :', predicted_index)
     print('prediction argmax sans 0 :', np.argmax(prediction, axis=1))
+    print(classes)
     predicted_class = classes[predicted_index]
     probability = prediction[0][predicted_index]
 
