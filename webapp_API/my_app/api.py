@@ -32,15 +32,12 @@ def get_model_and_classes_from_mlflow(run_id):
     # Charger les classes depuis le fichier JSON
     with open(classes_file_path, 'r') as f:
         classes = json.load(f)
-        print(f"Classes: {classes}")  # Ajouter cette ligne pour voir le contenu
-
-       
+        print(f"Classes: {classes}")       
 
     return model, classes
 
 # Chargement du modèle et des classes
 model, classes = get_model_and_classes_from_mlflow(MODEL_RUN_ID)
-
 
 
 # Fonction de prédiction
