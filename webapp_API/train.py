@@ -45,7 +45,7 @@ num_classes = len(classes)  # Number of classes
 
 imgs, targets = next(iter(directory_generator))
 
-metrics=[SparseCategoricalAccuracy()])
+metrics=[SparseCategoricalAccuracy()]
 
 # Commencer une nouvelle exécution MLflow
 mlflow.set_tracking_uri('https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com')  # Remplacez par l'URL de votre serveur MLflow
@@ -58,9 +58,8 @@ with mlflow.start_run():
     mlflow.log_param('batch_size', 8)
 
     
-    model = load_model("skincheck_cnn_sample_v10.keras")
-    history = json.load(open('skincheckhistory_cnn_sample_v10.json', 'r'))
-
+    model = load_model("skincheck_cnn_sample_v11.keras")
+    history = json.load(open('skincheckhistory_cnn_sample_v11.json', 'r'))
 
     # Enregistrer les métriques
     for epoch, acc in enumerate(history['sparse_categorical_accuracy']):
@@ -72,7 +71,8 @@ with mlflow.start_run():
     for epoch, val_loss in enumerate(history['val_loss']):
         mlflow.log_metric('val_loss', val_loss, step=epoch)
         
-     
+        
+        
     # Convert validation data to a format compatible with infer_signature
     val_imgs, val_targets = next(iter(directory_generator_val))
     val_imgs = np.array(val_imgs)  # Convertir en tableau NumPy

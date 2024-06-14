@@ -10,7 +10,7 @@ api = Flask(__name__)
 
 # Configuration de MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
-MODEL_RUN_ID = "1ae00ab9093b48d8ba17690ed193e157"
+MODEL_RUN_ID = "a2b4d06991ab4c75bbf7523c0dc61dea"
 
 UPLOAD_FOLDER = 'src/upload'
 if not os.path.exists(UPLOAD_FOLDER):
