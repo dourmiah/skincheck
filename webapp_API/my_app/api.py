@@ -10,7 +10,7 @@ api = Flask(__name__)
 
 # Configuration de MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
-MODEL_RUN_ID = "638e83f4b2cf4bda9f9243c1a8eec17e"
+MODEL_RUN_ID = "a2b4d06991ab4c75bbf7523c0dc61dea"
 
 UPLOAD_FOLDER = 'src/upload'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -19,26 +19,34 @@ if not os.path.exists(UPLOAD_FOLDER):
 # Fonction pour télécharger et charger le modèle et les classes depuis une exécution MLflow
 def get_model_and_classes_from_mlflow(run_id):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-    artifact_uri = f"runs:/{run_id}/model"
+    artifact_uri = f"runs:/{run_id}/SkinCheck"
+    print(f"Artifact URI: {artifact_uri}")  # Debugging line
     model = mlflow.keras.load_model(artifact_uri)
 
     # Télécharger les artefacts
     artifacts_path = mlflow.artifacts.download_artifacts(run_id=run_id)
+    print(f"Artifacts path: {artifacts_path}")  # Debugging line
+
     classes_file_path = os.path.join(artifacts_path, "classes.json")
 
     # Charger les classes depuis le fichier JSON
     with open(classes_file_path, 'r') as f:
         classes = json.load(f)
+        print(f"Classes: {classes}")  # Ajouter cette ligne pour voir le contenu
+
+       
 
     return model, classes
 
 # Chargement du modèle et des classes
 model, classes = get_model_and_classes_from_mlflow(MODEL_RUN_ID)
 
+
+
 # Fonction de prédiction
 def predict(image_path):
     # Prétraitement de l'image
-    img = image.load_img(image_path, target_size=(224, 224))
+    img = image.load_img(image_path, target_size=(512, 512))
     img = image.img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = img.astype('float32') / 255.0
@@ -46,9 +54,14 @@ def predict(image_path):
     # Prediction
     prediction = model.predict(img)
     predicted_index = np.argmax(prediction, axis=1)[0]
-    predicted_class = classes[predicted_index]  # Remplacer la ligne fautive
+    print("MMMMMMMMMMMMMMMMMMMMMM")
+    print(f"text: {image_path}")
+    print('prediction :', prediction)
+    print('predicted_index :', predicted_index)
+    print('prediction argmax sans 0 :', np.argmax(prediction, axis=1))
+    print(classes)
+    predicted_class = classes[predicted_index]
     probability = prediction[0][predicted_index]
-
 
     return predicted_class, float(probability)
 
@@ -98,6 +111,7 @@ def predict_image():
 @api.route('/result')
 def show_result():
     predicted_class = request.args.get('classe')
+    print(predicted_class)
     probability = float(request.args.get('probabilite'))
     return render_template('result.html', classe=predicted_class, probability=probability)
 
