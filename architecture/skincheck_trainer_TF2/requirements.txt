@@ -1,0 +1,11 @@
+tensorflow
+boto3
+mlflow
+psycopg2-binary
+pandas
+numpy
+matplotlib 
+seaborn 
+
+# scikit-learn==1.4.2
+# mlflow==2.13.1
