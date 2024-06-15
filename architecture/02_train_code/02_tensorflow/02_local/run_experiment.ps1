@@ -3,4 +3,4 @@
 # If you want to pass parameters pick option 2
 mlflow run --experiment-name $env:MLFLOW_EXPERIMENT_NAME .
 
-# mlflow run --experiment-name $env:MLFLOW_EXPERIMENT_NAME -P epochs=10 -P batch_size=1000 . 
+# mlflow run --experiment-name $env:MLFLOW_EXPERIMENT_NAME -P epochs=5 -P batch_size=750 . 

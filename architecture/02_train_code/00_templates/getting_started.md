@@ -78,23 +78,29 @@ There are 4 files:
 
 
 # Modify the template to train your model, save its artifacts, and its parameters
-1. Copy and paste the directory: `architecture\TF_local_2`
-1. As long as we do not need to add lib (sklearn etc.) we no longer need to rebuild the Docker image and we can focus on the training code
+1. Copy and paste the directory: `architecture\02_train_code\02_tensorflow\02_local`
+1. As long as you do not need to add lib (sklearn etc.) you no longer need to rebuild the Docker image and we can focus on the training code
+1. Open `secrets.ps1`
+    * Moditfy the name of the experiment (I like to use a name + a date [20240615 for example])
 1. Open `MLproject`
     * Adapt the top line:
-        * `name: modeling_housing_market`
+        * `name: californian_housing_market`
     * `entry_points`
-        * Here the `main` block specifies which script to launch. We leave as is.
+        * Here the `main` block specifies which script to launch. We leave as it is.
     * The `parameters` block:
         * Update the parameter names and their values
 1. Open `run_experiment.ps1`
-    * Same here, update the parameters passed to `mlflow run . --experiment-name modeling_housing_market`
-    * The line to adapt is: `--param-list-to-update`
-    * Be inspired by the line to pass your additional parameters
-    * Change the parameter names and values
+    * You should not have nothing to do except if you want to overwrite the default parameters
+
+
+
+
 
 # How to modify the template code?
-1. It is very academic/didactic object-oriented code
+1. It is a very academic/didactic object-oriented code
+    * Each method come with some documentation
+    * Each method provide hints about expected input and output
+
 1. At the top, adapt the constant:
     * `k_RelativePath = "modeling_housing_market"`
     * This is the name under which all your runs will be grouped
@@ -107,10 +113,10 @@ There are 4 files:
     ...
     mlflow.log_metric("load_data_time", time.time() - start_time)
     ```
-    It is best not to touch these lines and ensure that the returned values are the same as those in the template.
+    It is best not to touch these lines and ensure that the returned values are the same as those in the template (use the hints if needed)
 
     1. `__init__` method
-        * save additional parameters if any
+        * save additional parameters here if any
         * see in `main` how to instantiate a `ModelTrainer` class object before invoking `.run()`
     
     1. `load_data()` method
@@ -143,3 +149,8 @@ There are 4 files:
     * Normally, you shouldn't have to do anything
         * If you kept `epochs` and `batch_size` as parameters
     * Otherwise, be inspired by the existing code to include your own parameters
+
+* Now, feel free to read the other train.py source files in the ``architecture\02_train_code`` folder.
+* I tried to keep them consistent even if they are "improved/complexified" with time
+* In the ``architecture\02_train_code`` index at the begining of the directory name indicates (more or less) the date (the lower, the older)
+  
