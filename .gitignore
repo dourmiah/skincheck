@@ -1,9 +1,22 @@
 secrets.ps1
 secrets.sh
 *.pem
-
+./aws
 __pycache__/
 *.pyc
 
-photos_test/
 tmp/
+data_24/
+data_4/
+photos_test/
+
+# Pour info :
+#       Retrouver la taille du répertoire projet - github 5GB max
+#       (Get-ChildItem . -Recurse | Measure-Object -Property Length -sum).sum/1GB
+#
+#       Large files Size > 100MB (warning à 50MB)
+#       Pas moyen de spécifier la taille dans .gitignore
+#       Get-ChildItem ./ -recurse | where-object {$_.length -gt 100000000} | Sort-Object length | ft fullname, length -auto
+# 
+#       Find out where are the png files
+#       Get-ChildItem -Path . -Filter *.png -Recurse | Select-Object -ExpandProperty FullName
