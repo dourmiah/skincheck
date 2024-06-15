@@ -1,3 +1,8 @@
+# Exceute locally
+# Read data (california_housing_market.csv) locally or from S3
+# Save parameters and results to mlflow tracking
+# Save artifacts to S3
+
 import sys
 import argparse
 import pandas as pd
@@ -28,9 +33,10 @@ class ModelTrainer:
 
     def load_data(self):
         start_time = time.time()
-        data = pd.read_csv(
-            "https://skincheck-bucket.s3.eu-west-3.amazonaws.com/skincheck-dataset/california_housing_market.csv"
-        )
+        # data = pd.read_csv(
+        #     "https://skincheck-bucket.s3.eu-west-3.amazonaws.com/skincheck-dataset/california_housing_market.csv"
+        # )
+        data = pd.read_csv("./data/california_housing_market.csv")
         mlflow.log_metric("load_data_time", time.time() - start_time)
         return data
 

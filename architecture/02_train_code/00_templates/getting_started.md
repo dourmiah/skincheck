@@ -1,109 +1,145 @@
-<!-- 
-1. Ouvrir un terminal
-1. Passer dans l'environnement  
--->
 
-# Créer une image où on executera le code de training du modèle
-1. On est sous VSCode
-1. Aller dans le répertoire : architecture\skincheck_trainer_TF
-1. Y ouvrir une console
-1. Saisir la commande : ./build_skincheck_trainer_tf.ps1
-1. A la fin, pour vérifier que l'image est disponible,  saisir la commande : docker image ls
+# Note
+* june 15 2024
+* The instructions below have been review at this date
+* Some directories and filename may have change since then but the overall proces remains the same
 
+# Open VSCode
+1. Use file explorer to reach ``skincheck`` project directory
+1. Right click and select ``Open a windows terminal``
+1. Switch of virtual env : ``conda activate my_env``
+1. Launch VSCode : ``code .``
 
-# Tester que le template de code s'execute bien
-1. Aller dans le répertoire : architecture\TF_local_2
-Il y a 4 fichiers
-* MLproject : va utiliser l'image skincheck_trainer_tf pour lancer le script d'entrainement (train.py)
-    * On ne touche à rien pour l'instant mais plus tard on pourra y customiser :    
-        * name: voir le "californian_housing_market" en haut du fichier
-        * les paramètres : voir "epochs" et "batch_size"
-* run_experiment.ps1
-    * c'est le script qu'on va lancer
-    * Il s'assure que les variables d'environnement sont bien définies et de lancer mlflow qui va construire l'image et lancer le script dans l'image
-* secrets.ps1
-    * PAS TOUCHE
-    * Il est très important que secrets.ps1 soit dans le .gitignore
-* train.py
-    * C'est le code qui 
-        * Va chercher si besoin les données sur le bucket S3 
-            * Attention à ne pas abuser. C'est philippe qui paie. 
-        * Entraine le modele
-        * Chronometre chaque étape
-        * Sauve les artifacts sur S3 ainsi que les paramatres et les chronos sur le serveur mlflow tracking
-1. Ouvrir une console
-1. Saisir la commande : ./run_experiment.ps1
-1. A la fin aller sur le serveur mlflow tracking et y retrouver les résultats du test
-    * https://skincheck-tracking-server-6e98556bcc6b.herokuapp.com/
+# What is the program ?
+Below, we will : 
+1. Build the needed Docker image
+1. Run a default training code (just to make sure something works)
+1. Copy and customise our own training code
+
+# Create an image where we will run the model training code
+1. Make sure Docker is up and running
+1. We build a docker image which will be used to run a ``train.py`` code which use tensorflow API 
+1. From VSCode
+1. Click to the directory: `architecture\01_images_for_model_trainers\02_tensorflow_trainer`
+1. Open a terminal there (right click on the name, select ``open in itegrated terminal``)
+1. Execute the command: `./build_skincheck_trainer_tf.ps1`
+1. At the end, to check that the image is available, enter the command: `docker image ls`
+    * The name your are looking for is `skincheck_trainer_tf`
+
+### Optional
+1. Read and understand Dockerfile file
+    * Find the name of the image `skincheck_trainer_tf`
+    * Realise that the "flavor" of the image is mostly setup in ``requirements.txt``
+1. Read ``requirements.txt`` and realise that the ``train.py`` file (the training code for our model) is **NOT** going to be able to do much.
+    * Indeed except the 4 mandatory lib, it only include pandas.
+    * Later, if your train code need more lib, requirements.txt is where you will list them
 
 
-# Modifier le template pour entrainer votre modèle, enregistrer ses artifacts et ses paramètres
-1. Copier coller le répertoire : architecture\TF_local_2
-1. On a plus besoin de reconstruire une image faut juste se concentrer sur le code d'entrainement
-1. Ourir MLproject
-    * Adapter le "name", mettre "skincheck" (plutôt que californian_housing_market) 
-    * Modifier peut être les valeurs et/ou quantitites des paramètres
-1. Ouvrir train.py et modifier le code
-    * Voir section : Comment modifier le code du template
-1. Saisir la commande : ./run_experiment.ps1
-1. A la fin aller sur le serveur mlflow tracking et y retrouver les résultats du test
-    * https://skincheck-tracking-server-6e98556bcc6b.herokuapp.com/
 
 
-Si plus tard vous souhaitez passez des paramètres avec des valeurs autres que celles par défaut
-1. Ouvrir run_experiments
-1. Commenter/decommenter la ligne qui va bien
-1. Inspirez vous de la ligne pour passer vos paramètres complémentaires
-1. Changer les noms paramètres et les valeurs
 
 
-# Comment modifier le code du template?
-1. C'est un code objet très scolaire/didactique
-1. Tout en haut, il faut adapter la constante 
-    * k_RelativePath = "modeling_housing_market"
-    * C'est sous ce nom que seront regroupés tous vos runs
 
-1. Dans la classe ModelTrainer
 
-    Dans la plupart de méthode, le code à modifier se trouve entre les 2 lignes
-    ```
+# Test that the template code runs correctly
+1. make sure mlflow is available in your current python virtual environment
+    * ``conda list``
+    * If not, you can either ``conda install mlflow`` or switch to a virtual env where tensorflow is available
+1. Go to the directory: `architecture\02_train_code\02_tensorflow\02_local`
+There are 4 files:
+* `MLproject`: will use the `skincheck_trainer_tf` image to run the training script (`train.py`)
+    * We don't touch anything for now but later we can customize:
+        * `name`: see "californian_housing_market" at the top of the file
+        * parameters: see "epochs" and "batch_size"
+* `run_experiment.ps1`
+    * this is the script we will execute
+    * It ensures that the environment variables are setup correclty and launches `mlflow` which will build the image and run the train.py in the image
+* `secrets.ps1`
+    * DO NOT TOUCH
+    * It is very important that `secrets.ps1` is in the `.gitignore`
+* `train.py`
+    * This is the code that:
+        * Retrieves the data from the S3 bucket if needed
+            * Be carreful not to overuse it. Until now, I'm the one who paying.
+            * By default it loads the data from a local directory (./data)
+        * Trains the model
+        * Times each step
+        * Saves the artifacts on S3 as well as the parameters and timing information on the `mlflow` tracking server
+1. Open a console
+1. Enter the command: `./run_experiment.ps1`
+1. At the end, go to the `mlflow` tracking server and find the test results there
+    * [https://skincheck-tracking-server-6e98556bcc6b.herokuapp.com/](https://skincheck-tracking-server-6e98556bcc6b.herokuapp.com/)
+    * Realise that on the web page of the run, ``epoch`` and ``batch_size`` wich are passed as parameters (see MLproject file) to ``train.py`` are saved "for free" (no programming required)
+    * On the ohter hand, load_time, test_loss appears as results on the web page (programming required)
+
+
+
+
+
+
+# Modify the template to train your model, save its artifacts, and its parameters
+1. Copy and paste the directory: `architecture\TF_local_2`
+1. As long as we do not need to add lib (sklearn etc.) we no longer need to rebuild the Docker image and we can focus on the training code
+1. Open `MLproject`
+    * Adapt the top line:
+        * `name: modeling_housing_market`
+    * `entry_points`
+        * Here the `main` block specifies which script to launch. We leave as is.
+    * The `parameters` block:
+        * Update the parameter names and their values
+1. Open `run_experiment.ps1`
+    * Same here, update the parameters passed to `mlflow run . --experiment-name modeling_housing_market`
+    * The line to adapt is: `--param-list-to-update`
+    * Be inspired by the line to pass your additional parameters
+    * Change the parameter names and values
+
+# How to modify the template code?
+1. It is very academic/didactic object-oriented code
+1. At the top, adapt the constant:
+    * `k_RelativePath = "modeling_housing_market"`
+    * This is the name under which all your runs will be grouped
+
+1. In the `ModelTrainer` class
+
+    In most methods, the code to modify is between the 2 lines
+    ```python
     start_time = time.time()
     ...
     mlflow.log_metric("load_data_time", time.time() - start_time)
     ```
-    Il est préférable de ne pas toucher ces lignes et de faire en sorte que les valeurs retournées soient les mêmes que celles du template.
+    It is best not to touch these lines and ensure that the returned values are the same as those in the template.
 
-    1. Méthode `__init__`
-        * sauver les paramètres supplémenaires si il y en a
-        * aller voir dans main comment on instancie un objet de classe ModelTrainer avant d'invoquer .run()
+    1. `__init__` method
+        * save additional parameters if any
+        * see in `main` how to instantiate a `ModelTrainer` class object before invoking `.run()`
     
-    1. Méthode `load_data()`
-        * Vous chargez vos données dans data
+    1. `load_data()` method
+        * Load your data into `data`
 
-    1. Méthode `preprocess_data()`
-        * C'est là que vous traitez les données
+    1. `preprocess_data()` method
+        * This is where you process the data
 
-    1. Méthode `build_model()`
-        * Vous précisez l'organisation de votre modèle
+    1. `build_model()` method
+        * Specify your model's architecture
 
-    1. Méthode `train_model()`
-        * Normalement vous devriez avoir rien à faire
-        
-    1. Méthode `evaluate_model()`
-        * Normalement vous devriez avoir rien à faire
+    1. `train_model()` method
+        * Normally, you shouldn't have to do anything
+    
+    1. `evaluate_model()` method
+        * Normally, you shouldn't have to do anything
 
-    1. Méthode `log_parameters()`
-        * Normalement vous devriez avoir rien à faire
-        * Si vous avez des paramètres supplémentaires ajoutez les
+    1. `log_parameters()` method
+        * Normally, you shouldn't have to do anything
+        * If you have additional parameters, add them
 
-    1. Méthode `log_model()`
-        * Normalement vous devriez avoir rien à faire
+    1. `log_model()` method
+        * Normally, you shouldn't have to do anything
 
-    1. Méthode `run()`
-        * Elle appelle les autres méthodes en passant les paramètres
-        * Normalement vous devriez avoir rien à faire
+    1. `run()` method
+        * It calls the other methods passing the parameters
+        * Normally, you shouldn't have to do anything
 
-1. la fonction `__main__`
-    * Normalement vous devriez avoir rien à faire
-        * Si vous avez gardé epochs et batch_size en paramètre 
-    * Sinon fua ts'inspirer du code existant pour inclure vos propres paramètres
+1. `__main__` function
+    * Normally, you shouldn't have to do anything
+        * If you kept `epochs` and `batch_size` as parameters
+    * Otherwise, be inspired by the existing code to include your own parameters

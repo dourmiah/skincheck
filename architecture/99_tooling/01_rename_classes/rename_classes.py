@@ -1,4 +1,4 @@
-#  python .\rename_dataset.py .\data\
+#  python .\rename_dataset.py ../../data_24
 import os
 import argparse
 
