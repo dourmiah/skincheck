@@ -17,15 +17,11 @@ from sklearn.preprocessing import StandardScaler
 from mlflow.models.signature import infer_signature
 from sklearn.model_selection import train_test_split
 
-# Uncomment the line below if and only if Tensorflow is availble in the virtual env
+# Uncomment the line below if and only if Tensorflow is available in the virtual env
 # from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
 # https://medium.com/stackademic/the-ultimate-guide-to-python-logging-simple-effective-and-powerful-9dbae53d9d6d
 import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 
 # Artifacts will be stored under: skincheck-artifacts/2/118b36ff7c8f440db1a1c2bdb98d1008/artifacts/<k_RelativePath>/
 # skincheck-artifacts               : S3 bucket
@@ -58,7 +54,7 @@ class ModelTrainer:
             mlflow.log_metric("load_data_time", time.time() - start_time)
             return data
         except Exception as e:
-            print(f"Error loading data: {e}")
+            logger.error(f"Error loading data: {e}")
             raise
 
     # -------------------------------------------------------------------------
@@ -210,12 +206,9 @@ class ModelTrainer:
 
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
-    print("\n<START>\n")
-    print("OS                   : ", sys.platform)
-    print("Python version       : ", sys.version.split("|")[0])
-    print("mlflow version       : ", mlflow.__version__)
-    print("TensorFlow version   : ", tf.__version__)
-    print("\nTraining started     :")
+
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
     logger.info("<START>")
     logger.info(f"OS                   : {sys.platform}")

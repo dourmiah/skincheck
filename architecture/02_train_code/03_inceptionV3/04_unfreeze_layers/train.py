@@ -12,39 +12,20 @@ import seaborn as sns
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
+# https://medium.com/stackademic/the-ultimate-guide-to-python-logging-simple-effective-and-powerful-9dbae53d9d6d
+# DEBUG INFO WARNING ERROR CRITICAL
+import logging
+import logging.config
 
+from typing import Tuple
 from tensorflow.keras.regularizers import l2
 from sklearn.metrics import confusion_matrix
 from mlflow.models.signature import infer_signature
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
+
 # https://stackoverflow.com/questions/66908259/how-to-fine-tune-inceptionv3-in-keras
-
-
-#  Code de Dominique pour afficher la matrice de confusion "correctement"
-# 1162 = nb images train
-# 8 = batch size
-
-# predictionsarray = []
-# true_array = []
-# for  in range(1162//8):
-#     val_imgs, val_targets = next(directory_generator_val)
-#     predictions = modelconv.predict(val_imgs)
-#     predicted_classes = np.argmax(predictions, axis=1)
-#     # true_classes = directory_generator_val.classes
-#     true_classes = val_targets
-#     predictions_array += list(predicted_classes)
-#     true_array += list(true_classes)
-
-# class_labels = list(directory_generator_val.class_indices.keys())
-# cm = confusion_matrix(true_array, predictions_array)
-# plt.figure(figsize=(8, 6))
-# sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=class_labels, yticklabels=class_labels)
-# plt.xlabel('Predicted labels')
-# plt.ylabel('True labels')
-# plt.title('Confusion Matrix')
-# plt.show()
 
 
 # -----------------------------------------------------------------------------
@@ -72,7 +53,7 @@ k_XpPhase = "Investigation"
 class ModelTrainer:
 
     # -----------------------------------------------------------------------------
-    def __init__(self, epochs, batch_size):
+    def __init__(self, epochs: int, batch_size: int) -> None:
         # self.epochs = epochs
         self.epochs = k_Epochs  # Faster to set it that way
 
@@ -80,26 +61,50 @@ class ModelTrainer:
         self.batch_size = k_BatchSize
 
     # -----------------------------------------------------------------------------
-    def load_data(self):
-        start_time = time.time()
-        # data = pd.read_csv(
-        #     "https://skincheck-bucket.s3.eu-west-3.amazonaws.com/skincheck-dataset/california_housing_market.csv"
-        # )
-        mlflow.log_metric("load_data_time", time.time() - start_time)
-        return
+    def load_data(self) -> pd.DataFrame:
+        """
+        Load the dataset from a local CSV file or from S3.
+        Logs the time taken to load the data.
+        Returns:
+            pd.DataFrame: Loaded data.
+        """
+        try:
+            start_time = time.time()
+            # Uncomment the line below to load data from S3
+            # data = pd.read_csv("https://skincheck-bucket.s3.eu-west-3.amazonaws.com/skincheck-dataset/california_housing_market.csv")
+            data = pd.read_csv("./data/california_housing_market.csv")
+            mlflow.log_metric("load_data_time", time.time() - start_time)
+            return data
+        except Exception as e:
+            logger.error(f"Error loading data: {e}")
+            raise
 
     # -----------------------------------------------------------------------------
-    def preprocess_data(self):
+    def preprocess_data(
+        self,
+    ) -> Tuple[
+        tf.keras.preprocessing.image.DirectoryIterator,
+        tf.keras.preprocessing.image.DirectoryIterator,
+    ]:
+        """
+        Preprocesses image data for training and validation.
+
+        Returns:
+            Tuple[tf.keras.preprocessing.image.DirectoryIterator, tf.keras.preprocessing.image.DirectoryIterator]:
+                Tuple containing the training and validation data generators.
+        """
         start_time = time.time()
-        # This is where we split between train & validation.
+
+        # # This is where we split between train & validation.
         img_generator = tf.keras.preprocessing.image.ImageDataGenerator(
             rescale=1.0 / 255, validation_split=0.3
         )
 
-        # Create 2 flux : training, validation
-        # TODO : should be a parameter?
+        # TODO : should it be a parameter?
         train_data_dir = k_DataDir
 
+        # Create 2 flux : training, validation
+        # Flow from directory for training data
         img_generator_flow_train = img_generator.flow_from_directory(
             directory=train_data_dir,
             target_size=(k_Img_Height, k_Img_Width),
@@ -108,10 +113,11 @@ class ModelTrainer:
             subset="training",
         )
 
+        # Map class indices to class names
         class_indices = img_generator_flow_train.class_indices
-        # Replace y_true, y_pred indices with names
         self.indices_to_class = {v: k for k, v in class_indices.items()}
 
+        # Flow from directory for validation data
         img_generator_flow_valid = img_generator.flow_from_directory(
             directory=train_data_dir,
             target_size=(k_Img_Height, k_Img_Width),
@@ -120,11 +126,22 @@ class ModelTrainer:
             subset="validation",
         )
 
+        # Log preprocessing time using MLflow
         mlflow.log_metric("preprocess_data_time", time.time() - start_time)
+
+        # Return both training and validation data generators
         return img_generator_flow_train, img_generator_flow_valid
 
     # -----------------------------------------------------------------------------
-    def build_model(self):
+    def build_model(self) -> tf.keras.Model:
+        """
+        Build and compile a Keras sequential model.
+        Args:
+            input_shape (int): The shape of the input data.
+        Returns:
+            tf.keras.Model: Compiled Keras model.
+        """
+
         start_time = time.time()
 
         base_model = tf.keras.applications.InceptionV3(
@@ -224,7 +241,23 @@ class ModelTrainer:
     #       validation_batch_size=16,   # set validation batch size
     #       ...,
     # )
-    def train_model(self, model, img_generator_flow_train, img_generator_flow_valid):
+    def train_model(
+        self,
+        model: tf.keras.Model,
+        img_generator_flow_train: tf.keras.preprocessing.image.DirectoryIterator,
+        img_generator_flow_valid: tf.keras.preprocessing.image.DirectoryIterator,
+    ) -> tf.keras.Model:
+        """
+        Train the model on the training data.
+        Logs the time taken to train the model.
+        Args:
+            model (tf.keras.Model): The compiled Keras model.
+            X_train (pd.DataFrame): Training features.
+            y_train (pd.Series): Training labels.
+        Returns:
+            tf.keras.Model: The trained model
+        """
+
         start_time = time.time()
 
         # Configurer le callback EarlyStopping
@@ -247,53 +280,42 @@ class ModelTrainer:
         return model
 
     # -----------------------------------------------------------------------------
-    def evaluate_model(self, model, img_generator_flow_valid):
-        start_time = time.time()
+    def evaluate_model_1(self, model, img_generator_flow_validation):
 
-        history_dict = model.history.history
+        # y_true = img_generator_flow_validation.classes
+        # model.predict() retourne un tableau de forme (num_images, num_classes)
+        # num_images est le nombre d'images dans l'ensemble de validation et num_classes est le nombre de classes de classification.
+        # Chaque entrée predictions[i] est donc un vecteur de probabilités pour les différentes classes pour l'image i.
+        # axis=-1 spécifie l'axe le plus interne.
+        # Pour le tableau 2D en sortie de model.predict() cela signifie qu'il trouvera l'indice de la valeur maximale le long de la dernière dimension
+        # => pour chaque vecteur de classes
+        # y_pred = np.argmax(model.predict(img_generator_flow_validation), axis=-1)
 
-        plt.figure()
-        plt.plot(history_dict["categorical_accuracy"], c="r", label="Train Accuracy")
-        plt.plot(
-            history_dict["val_categorical_accuracy"], c="b", label="Validation Accuracy"
-        )
-        plt.legend()
-        plt.title("Accuracy vs epochs")
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        title = f"./img/{timestamp}_accuracy.png"
-        plt.savefig(title)
-        mlflow.log_artifact(title)
+        # Pas besoin de gestion explicite multilabel
+        # labels instead of classes for multilabel
+        y_true = img_generator_flow_validation.labels
+        y_pred = model.predict(img_generator_flow_validation)
 
-        plt.figure()
-        plt.plot(history_dict["loss"], c="r", label="Train Loss")
-        plt.plot(history_dict["val_loss"], c="b", label="Validation Loss")
-        plt.legend()
-        plt.title("Loss vs epochs")
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        title = f"./img/{timestamp}_loss.png"
-        plt.savefig(title)
-        mlflow.log_artifact(title)
+        if len(y_true.shape) > 1 and y_true.shape[1] > 1:
+            # Convert multilabel to single label
+            logger.info(f"evaluate_model_1 - multi-label")
 
-        # Pour img_generator_flow_valid voir la ligne
-        # img_generator_flow_valid = img_generator.flow_from_directory()
-        y_true = img_generator_flow_valid.classes
-        y_pred = np.argmax(model.predict(img_generator_flow_valid), axis=-1)
-
-        accuracy = accuracy_score(y_true, y_pred)
-        precision = precision_score(y_true, y_pred, average="weighted")
-        recall = recall_score(y_true, y_pred, average="weighted")
-        f1 = f1_score(y_true, y_pred, average="weighted")
-        mlflow.log_metric("Accuracy", accuracy)
-        mlflow.log_metric("Precision", precision)
-        mlflow.log_metric("Recall/Sensitivity", recall)
-        mlflow.log_metric("F1 Score", f1)
+            y_true = np.argmax(y_true, axis=1)
+            y_pred = np.argmax(y_pred, axis=1)
+        else:
+            y_pred = np.argmax(y_pred, axis=-1)
+            logger.info(f"evaluate_model_1 - no multi-label")
 
         cm = confusion_matrix(y_true, y_pred)
-        plt.figure(figsize=(12.0, 10.0))  # 1.618
-        class_names = [
-            self.indices_to_class[i] for i in range(len(self.indices_to_class))
-        ]
-        heatmap = sns.heatmap(
+        plt.figure(figsize=(12.0, 10.0))
+
+        class_names = list(img_generator_flow_validation.class_indices.keys())
+        # class_names = [self.indices_to_class[i] for i in range(len(self.indices_to_class))]
+        # logger.debug(f"evaluate_model_1 - class_names  = {class_names}")
+        # 2024-06-15 17:27:36,060 - __main__ - DEBUG - evaluate_model_1 - class_names  = ['acne_and_rosacea', 'actinic_keratosis', 'atopic_dermatitis', 'healthy_skins']
+        # 2024-06-15 17:28:04,353 - __main__ - DEBUG - evaluate_model_2 - class_names  = ['acne_and_rosacea', 'actinic_keratosis', 'atopic_dermatitis', 'healthy_skins']
+
+        sns.heatmap(
             cm,
             annot=True,
             fmt="d",
@@ -302,82 +324,234 @@ class ModelTrainer:
             xticklabels=class_names,
             yticklabels=class_names,
         )
-        heatmap.set_xticklabels(
-            heatmap.get_xticklabels(), rotation=45, ha="right", fontsize=10
-        )
-        heatmap.set_yticklabels(
-            heatmap.get_yticklabels(), rotation=0, ha="right", fontsize=10
-        )
-
-        plt.xlabel("Predicted labels")
-        plt.ylabel("True labels")
-        plt.title("Confusion Matrix")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        title = f"./img/{timestamp}_confusion_matrix.png"
-        plt.tight_layout()
+        title = f"./img/{timestamp}_confusion_matrix_1.png"
         plt.savefig(title)
         mlflow.log_artifact(title)
+        return
 
-        # -----------------------------------------------------------------------------
-        # -----------------------------------------------------------------------------
-        # -----------------------------------------------------------------------------
-        # -----------------------------------------------------------------------------
-        # -----------------------------------------------------------------------------
-        # -----------------------------------------------------------------------------
-        predictions_array = []
-        true_array = []
+    # -----------------------------------------------------------------------------
+    # Dans evaluate_model_1, les étiquettes vraies sont récupérées directement de img_generator_flow_validation.classes.
+    # Dans evaluate_model_2, les étiquettes vraies sont récupérées par lots via l'itérateur du générateur d'images.
+    # Cela peut causer des incohérences si le générateur d'images ne retourne pas les étiquettes dans le même ordre que img_generator_flow_validation.classes.
+    # evaluate_model_1 utilise une prédiction globale sur tout l'ensemble de validation.
+    # evaluate_model_2 prédit par lots, ce qui peut entraîner des variations si les lots sont traités de manière différente
+    # par exemple, si le générateur n'est pas parfaitement synchronisé
+    def evaluate_model_2(self, model, img_generator_flow_validation):
 
-        for _ in range(1114 // k_BatchSize):
-            val_imgs, val_targets = next(iter(img_generator_flow_valid))
+        y_true = []
+        y_pred = []
+
+        # logger.debug(f"Nb images valiadation = {img_generator_flow_validation.n}")
+        # nb_image_val = 1114
+        nb_image_val = img_generator_flow_validation.n
+        batch_size = img_generator_flow_validation.batch_size
+
+        # Gestion explicite multi-label
+        for _ in range(nb_image_val // batch_size):
+            val_imgs, val_targets = next(iter(img_generator_flow_validation))
             predictions = model.predict(val_imgs, verbose=0)
             predicted_classes = np.argmax(predictions, axis=1)
 
             # Convert val_targets to class indices if it's in multilabel-indicator format
+            # Confirmé : on est en multi label
             if len(val_targets.shape) > 1 and val_targets.shape[1] > 1:
                 true_classes = np.argmax(val_targets, axis=1)
+                # logger.info(f"evaluate_model_2 - multi-label")
             else:
                 true_classes = val_targets
+                # logger.info(f"evaluate_model_2 - no multi-label")
 
-            predictions_array += list(predicted_classes)
-            true_array += list(true_classes)
+            y_pred += list(predicted_classes)
+            y_true += list(true_classes)
 
-        class_labels = list(img_generator_flow_valid.class_indices.keys())
-        cm2 = confusion_matrix(true_array, predictions_array)
+        # Sans gestion explicite multilabel => MARCHE PAS
+        # for _ in range(nb_image_val // batch_size):
+        #     val_imgs, val_targets = next(iter(img_generator_flow_validation))
+        #     predictions = model.predict(val_imgs, verbose=0)
+        #     predicted_classes = np.argmax(predictions, axis=-1)
+
+        #     # Directly append the true classes and predicted classes
+        #     y_true += list(val_targets)
+        #     y_pred += list(predicted_classes)
+
+        cm = confusion_matrix(y_true, y_pred)
         plt.figure(figsize=(12.0, 10.0))
+
+        class_names = list(img_generator_flow_validation.class_indices.keys())
+        # logger.debug(f"evaluate_model_2 - class_names  = {class_names}")
+        # 2024-06-15 17:27:36,060 - __main__ - DEBUG - evaluate_model_1 - class_names  = ['acne_and_rosacea', 'actinic_keratosis', 'atopic_dermatitis', 'healthy_skins']
+        # 2024-06-15 17:28:04,353 - __main__ - DEBUG - evaluate_model_2 - class_names  = ['acne_and_rosacea', 'actinic_keratosis', 'atopic_dermatitis', 'healthy_skins']
+
         sns.heatmap(
-            cm2,
+            cm,
             annot=True,
-            fmt="g",
+            fmt="d",
             cmap="Blues",
-            xticklabels=class_labels,
-            yticklabels=class_labels,
+            cbar=False,
+            xticklabels=class_names,
+            yticklabels=class_names,
         )
-        plt.xlabel("Predicted labels")
-        plt.ylabel("True labels")
-        plt.title("Confusion Matrix")
-        timestamp2 = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        title2 = f"./img/{timestamp2}_confusion_matrix2.png"
-        plt.tight_layout()
-        plt.savefig(title2)
-        mlflow.log_artifact(title2)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        title = f"./img/{timestamp}_confusion_matrix_2.png"
+        plt.savefig(title)
+        mlflow.log_artifact(title)
+        return
 
-        # Voir plus tard
-        # average=None => pour chaque classe
-        # recall = recall_score(y_true, y_pred, average=None)
-        # specificity = []
-        # for i in range(num_classes):
-        #     tn = np.sum(cm) - (np.sum(cm[:, i]) + np.sum(cm[i, :]) - cm[i, i])
-        #     fp = np.sum(cm[:, i]) - cm[i, i]
-        #     specificity.append(tn / (tn + fp))
-        #
-        # for i in range(num_classes):
-        #     print(f"Class {i}: Sensitivity (Recall) = {recall[i]}, Specificity = {specificity[i]}")
-
-        mlflow.log_metric("evaluate_model_time", time.time() - start_time)
+    # ------------------------------------------------------------------------------
+    def evaluate_model(self, model, img_generator_flow_validation):
+        mlflow.set_tag("debug", "confusion matrix")
+        self.evaluate_model_1(model, img_generator_flow_validation)
+        self.evaluate_model_2(model, img_generator_flow_validation)
         return
 
     # -----------------------------------------------------------------------------
-    def log_parameters(self):
+    # def evaluate_model(
+    #     self,
+    #     model: tf.keras.Model,
+    #     img_generator_flow_validation: tf.keras.preprocessing.image.DirectoryIterator,
+    # ) -> None:
+    #     """
+    #     Evaluate the model on the test data.
+    #     Logs the time taken to evaluate the model and the test loss.
+    #     Args:
+    #         model (tf.keras.Model): The trained Keras model.
+    #         img_generator_flow_validation (tf.keras.preprocessing.image.DirectoryIterator) : Validation set
+    #     """
+    #     start_time = time.time()
+
+    #     history_dict = model.history.history
+
+    #     plt.figure()
+    #     plt.plot(history_dict["categorical_accuracy"], c="r", label="Train Accuracy")
+    #     plt.plot(
+    #         history_dict["val_categorical_accuracy"], c="b", label="Validation Accuracy"
+    #     )
+    #     plt.legend()
+    #     plt.title("Accuracy vs epochs")
+    #     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     title = f"./img/{timestamp}_accuracy.png"
+    #     plt.savefig(title)
+    #     mlflow.log_artifact(title)
+
+    #     plt.figure()
+    #     plt.plot(history_dict["loss"], c="r", label="Train Loss")
+    #     plt.plot(history_dict["val_loss"], c="b", label="Validation Loss")
+    #     plt.legend()
+    #     plt.title("Loss vs epochs")
+    #     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     title = f"./img/{timestamp}_loss.png"
+    #     plt.savefig(title)
+    #     mlflow.log_artifact(title)
+
+    #     # Pour img_generator_flow_valid voir la ligne
+    #     # img_generator_flow_valid = img_generator.flow_from_directory()
+    #     y_true = img_generator_flow_validation.classes
+    #     y_pred = np.argmax(model.predict(img_generator_flow_validation), axis=-1)
+
+    #     accuracy = accuracy_score(y_true, y_pred)
+    #     precision = precision_score(y_true, y_pred, average="weighted")
+    #     recall = recall_score(y_true, y_pred, average="weighted")
+    #     f1 = f1_score(y_true, y_pred, average="weighted")
+    #     mlflow.log_metric("Accuracy", accuracy)
+    #     mlflow.log_metric("Precision", precision)
+    #     mlflow.log_metric("Recall/Sensitivity", recall)
+    #     mlflow.log_metric("F1 Score", f1)
+
+    #     cm = confusion_matrix(y_true, y_pred)
+    #     plt.figure(figsize=(12.0, 10.0))  # 1.618
+    #     class_names = [
+    #         self.indices_to_class[i] for i in range(len(self.indices_to_class))
+    #     ]
+    #     heatmap = sns.heatmap(
+    #         cm,
+    #         annot=True,
+    #         fmt="d",
+    #         cmap="Blues",
+    #         cbar=False,
+    #         xticklabels=class_names,
+    #         yticklabels=class_names,
+    #     )
+    #     heatmap.set_xticklabels(
+    #         heatmap.get_xticklabels(), rotation=45, ha="right", fontsize=10
+    #     )
+    #     heatmap.set_yticklabels(
+    #         heatmap.get_yticklabels(), rotation=0, ha="right", fontsize=10
+    #     )
+
+    #     plt.xlabel("Predicted labels")
+    #     plt.ylabel("True labels")
+    #     plt.title("Confusion Matrix")
+    #     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     title = f"./img/{timestamp}_confusion_matrix.png"
+    #     plt.tight_layout()
+    #     plt.savefig(title)
+    #     mlflow.log_artifact(title)
+
+    #     # -----------------------------------------------------------------------------
+    #     # -----------------------------------------------------------------------------
+    #     # -----------------------------------------------------------------------------
+    #     # -----------------------------------------------------------------------------
+    #     # -----------------------------------------------------------------------------
+    #     # -----------------------------------------------------------------------------
+    #     predictions_array = []
+    #     true_array = []
+
+    #     for _ in range(1114 // k_BatchSize):
+    #         val_imgs, val_targets = next(iter(img_generator_flow_validation))
+    #         predictions = model.predict(val_imgs, verbose=0)
+    #         predicted_classes = np.argmax(predictions, axis=1)
+
+    #         # Convert val_targets to class indices if it's in multilabel-indicator format
+    #         if len(val_targets.shape) > 1 and val_targets.shape[1] > 1:
+    #             true_classes = np.argmax(val_targets, axis=1)
+    #         else:
+    #             true_classes = val_targets
+
+    #         predictions_array += list(predicted_classes)
+    #         true_array += list(true_classes)
+
+    #     class_labels = list(img_generator_flow_validation.class_indices.keys())
+    #     cm2 = confusion_matrix(true_array, predictions_array)
+    #     plt.figure(figsize=(12.0, 10.0))
+    #     sns.heatmap(
+    #         cm2,
+    #         annot=True,
+    #         fmt="g",
+    #         cmap="Blues",
+    #         xticklabels=class_labels,
+    #         yticklabels=class_labels,
+    #     )
+    #     plt.xlabel("Predicted labels")
+    #     plt.ylabel("True labels")
+    #     plt.title("Confusion Matrix")
+    #     timestamp2 = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     title2 = f"./img/{timestamp2}_confusion_matrix2.png"
+    #     plt.tight_layout()
+    #     plt.savefig(title2)
+    #     mlflow.log_artifact(title2)
+
+    #     # Voir plus tard
+    #     # average=None => pour chaque classe
+    #     # recall = recall_score(y_true, y_pred, average=None)
+    #     # specificity = []
+    #     # for i in range(num_classes):
+    #     #     tn = np.sum(cm) - (np.sum(cm[:, i]) + np.sum(cm[i, :]) - cm[i, i])
+    #     #     fp = np.sum(cm[:, i]) - cm[i, i]
+    #     #     specificity.append(tn / (tn + fp))
+    #     #
+    #     # for i in range(num_classes):
+    #     #     print(f"Class {i}: Sensitivity (Recall) = {recall[i]}, Specificity = {specificity[i]}")
+
+    #     mlflow.log_metric("evaluate_model_time", time.time() - start_time)
+    #     return
+
+    # -----------------------------------------------------------------------------
+    def log_parameters(self) -> None:
+        """
+        Log the training parameters to mlflow.
+        """
+
         mlflow.log_param("Classes", k_NbClasses)
         mlflow.log_param("Epochs", self.epochs)
         mlflow.log_param("Steps per epochs", k_StepsPerEpoch)
@@ -393,7 +567,17 @@ class ModelTrainer:
         mlflow.set_tag("TensorFlow version", tf.__version__)
 
     # -----------------------------------------------------------------------------
-    def log_model(self, model, img_generator_flow_train):
+    def log_model(
+        self,
+        model: tf.keras.Model,
+        img_generator_flow_train: tf.keras.preprocessing.image.DirectoryIterator,
+    ) -> None:
+        """
+        Log the trained model to mlflow with a signature.
+        Args:
+            model (tf.keras.Model): The trained Keras model.
+            img_generator_flow_train (tf.keras.preprocessing.image.DirectoryIterator): Training features.
+        """
         start_time = time.time()
         example_input, _ = next(img_generator_flow_train)
         example_output = model.predict(example_input)
@@ -407,7 +591,18 @@ class ModelTrainer:
         mlflow.log_metric("log_model", time.time() - start_time)
 
     # -----------------------------------------------------------------------------
-    def run(self):
+    def run(self) -> None:
+        """
+        Execute the full training and evaluation pipeline:
+        - Load data
+        - Preprocess data
+        - Log parameters
+        - Build model
+        - Train model
+        - Evaluate model
+        - Log model
+        - Log total runtime
+        """
         with mlflow.start_run():
             total_start_time = time.time()
             # self.load_data()                            # not needed with this model
@@ -424,17 +619,29 @@ class ModelTrainer:
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
+# logger.debug("This is a debug message")
+# logger.info("This is an info message")
+# logger.warning("This is a warning message")
+# logger.error("This is an error message")
+# logger.critical("This is a critical message")
+
 if __name__ == "__main__":
 
-    # Définir les seeds pour obtenir des résultats reproductibles
+    start_time = time.time()
+
+    # Load the logging configuration from the file
+    logging.config.fileConfig("logging.conf")
+    logger = logging.getLogger(__name__)
+
+    # Setup random generators suche that we can compare runs over time
     seed = 0
     tf.random.set_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
 
-    start_time = time.time()
-
     os.makedirs("./img", exist_ok=True)
+
+    logger.info(f"Training started")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, required=True)
@@ -444,4 +651,5 @@ if __name__ == "__main__":
     trainer = ModelTrainer(args.epochs, args.batch_size)
     trainer.run()
 
-    print(f"Training time        : {(time.time()-start_time):.3f} sec.")
+    logger.info(f"Training time        : {(time.time()-start_time):.3f} sec.")
+    logger.info(f"Training stopped")

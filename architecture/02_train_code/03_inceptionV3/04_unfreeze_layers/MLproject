@@ -4,7 +4,7 @@ name: skin_check
 
 docker_env:
   image: skincheck_trainer_tf2
-  volumes: ["%cd%:/home/app", "%cd%/../data_4:/home/data"]
+  volumes: ["%cd%:/home/app", "%cd%/../../../data_4:/home/data"]
   # volumes: ["%cd%:/home/app", "%cd%/../data_4:/home/data"]
   environment: [ 
       "MLFLOW_TRACKING_URI", 

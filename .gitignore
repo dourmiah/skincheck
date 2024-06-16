@@ -2,6 +2,9 @@ secrets.ps1
 secrets.sh
 *.pem
 ./aws
+
+*.log
+
 __pycache__/
 *.pyc
 
