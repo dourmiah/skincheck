@@ -8,7 +8,7 @@ import json
 
 api = Flask(__name__)
 
-# Configuration de MLflow
+# Configuring MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
 MODEL_RUN_ID = "a92f4cdbbf1c42468531275f4a8556d3"
 
@@ -17,31 +17,31 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 
-# Fonction pour télécharger et charger le modèle et les classes depuis une exécution MLflow
+# Function to download and load the model and classes from an MLflow execution
 def get_model_and_classes_from_mlflow(run_id):
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     artifact_uri = f"runs:/{run_id}/SkinCheck"
     model = mlflow.keras.load_model(artifact_uri)
 
-    # Télécharger les artefacts
+    # Download artifacts
     artifacts_path = mlflow.artifacts.download_artifacts(run_id=run_id)
 
     classes_file_path = os.path.join(artifacts_path, "classes.json")
 
-    # Charger les classes depuis le fichier JSON
+    # Load classes from JSON file
     with open(classes_file_path, "r") as f:
         classes = json.load(f)
 
     return model, classes
 
 
-# Chargement du modèle et des classes
+# Loading the model and classes
 model, classes = get_model_and_classes_from_mlflow(MODEL_RUN_ID)
 
 
-# Fonction de prédiction
+# Prediction function
 def predict(image_path):
-    # Prétraitement de l'image
+    # Image preprocessing
     img = image.load_img(image_path, target_size=(512, 512))
     img = image.img_to_array(img)
     img = np.expand_dims(img, axis=0)
@@ -56,10 +56,10 @@ def predict(image_path):
     return predicted_class, float(probability)
 
 
-# Fonction pour traiter une requête d'envoi d'image
+# Function to process an image send request
 def new_predict(request):
     try:
-        # Récupérer l'image envoyée
+        # Retrieve the sent image
         if "file" not in request.files:
             return jsonify({"error": "Aucune image envoyée"}), 400
 
@@ -67,28 +67,28 @@ def new_predict(request):
         if file.filename == "":
             return jsonify({"error": "Nom de fichier invalide"}), 400
 
-        # Enregistrer l'image temporairement
+        # Save image temporarily
         image_path = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
         file.save(image_path)
 
-        # Prédire la classe de l'image
+        # Predict image class
         predicted_class, probability = predict(image_path)
 
-        # Supprimer l'image temporaire
+        # Delete temporary image
         os.remove(image_path)
 
         print(f"Image supprimée : {image_path}")
 
-        # Retourner la classe prédite et la probabilité associée
+        # Return the predicted class and associated probability
         return {"classe": predicted_class, "probabilite": probability}
 
     except Exception as e:
-        # Gérer les erreurs
+       
         print(f"Erreur lors de la prédiction : {e}")
         return jsonify({"error": "Une erreur est survenue"}), 500
 
 
-# Route pour l'envoi d'une image
+# Route for sending an image
 @api.route("/api/predict", methods=["POST"])
 def predict_image():
     try:
@@ -106,7 +106,7 @@ def predict_image():
         return jsonify({"error": f"Une erreur est survenue : {e}"}), 500
 
 
-# Route pour afficher le résultat
+# Route to display result
 @api.route("/result")
 def show_result():
     predicted_class = request.args.get("classe")
@@ -117,7 +117,7 @@ def show_result():
     )
 
 
-# Fonction pour obtenir la version du modèle
+# Function to get model version
 def get_model_version(run_id):
     client = mlflow.tracking.MlflowClient()
     run = client.get_run(run_id)
