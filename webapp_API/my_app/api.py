@@ -6,6 +6,9 @@ from werkzeug.utils import secure_filename
 from tensorflow.keras.preprocessing import image
 import json
 import boto3
+from dotenv import load_dotenv
+
+load_dotenv()
 
 api = Flask(__name__)
 
