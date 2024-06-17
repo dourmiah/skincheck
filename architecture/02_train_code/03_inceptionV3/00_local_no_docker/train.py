@@ -9,8 +9,8 @@ from sklearn.metrics import confusion_matrix
 
 # Prétraitement des images avec ImageDataGenerator
 k_Batch_Size = 32
-k_Img_Height = 224
-k_Img_Width = 224
+k_Img_Height = 299  # 224
+k_Img_Width = 299  # 224
 
 k_data_dir = "../data_4/train"
 k_nb_classes = 4
