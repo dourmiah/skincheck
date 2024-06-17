@@ -1,0 +1,9 @@
+Environnement virtuel
+
+python -m venv mon_env
+
+env\Scripts\activate 
+
+desactivate
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
