@@ -13,12 +13,12 @@ from tensorflow.keras.optimizers import Adam
 import json
 from mlflow.models.signature import infer_signature
 
-# Définir les chemins
+# Define paths
 train_dir = 'D:\Quentin\jedha\jedhaFullStack\docker\mlflow\package_serve\mlflow_project\data\train'
 validation_dir = 'D:\Quentin\jedha\jedhaFullStack\docker\mlflow\package_serve\mlflow_project\data\test'
 k_RelativePath = "SkinCheck"
 
-# Prétraitement des images
+# Image preprocessing
 img_generator = ImageDataGenerator()
 
 directory_generator = img_generator.flow_from_directory(
@@ -39,7 +39,7 @@ directory_generator_val = img_generator.flow_from_directory(
     #subset = "validation"
 )
 
-# Extraire les classes
+# Extract classes
 classes = list(directory_generator_val.class_indices.keys())
 num_classes = len(classes)  # Number of classes
 
@@ -47,12 +47,12 @@ imgs, targets = next(iter(directory_generator))
 
 metrics=[SparseCategoricalAccuracy()]
 
-# Commencer une nouvelle exécution MLflow
+# Start a new MLflow run
 mlflow.set_tracking_uri('https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com')  # Remplacez par l'URL de votre serveur MLflow
 mlflow.set_experiment('SkinCheck')
 
 with mlflow.start_run():
-    # Enregistrer les paramètres
+    # Save settings
     mlflow.log_param('learning_rate', 0.0001)
     mlflow.log_param('epochs', 25)
     mlflow.log_param('batch_size', 8)
@@ -61,7 +61,7 @@ with mlflow.start_run():
     model = load_model("skincheck_cnn_sample_v11.keras")
     history = json.load(open('skincheckhistory_cnn_sample_v11.json', 'r'))
 
-    # Enregistrer les métriques
+    # Save metrics
     for epoch, acc in enumerate(history['sparse_categorical_accuracy']):
         mlflow.log_metric('train_accuracy', acc, step=epoch)
     for epoch, val_acc in enumerate(history['val_sparse_categorical_accuracy']):
@@ -75,12 +75,12 @@ with mlflow.start_run():
         
     # Convert validation data to a format compatible with infer_signature
     val_imgs, val_targets = next(iter(directory_generator_val))
-    val_imgs = np.array(val_imgs)  # Convertir en tableau NumPy
+    val_imgs = np.array(val_imgs)  # Convert to NumPy array
     
 
     predictions = model.predict(val_imgs)
 
-    # Enregistrer le modèle
+    # Save template
     signature = infer_signature(val_imgs, predictions)
     mlflow.keras.log_model(
             model=model,
@@ -89,7 +89,7 @@ with mlflow.start_run():
             signature=signature,
         )
     
-        # Enregistrer les classes comme un artefact
+        # Save classes as an artifact
     with open("classes.json", "w") as f:
         json.dump(classes, f)
     mlflow.log_artifact("classes.json")
