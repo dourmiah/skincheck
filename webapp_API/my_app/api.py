@@ -5,12 +5,28 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for
 from werkzeug.utils import secure_filename
 from tensorflow.keras.preprocessing import image
 import json
+import boto3
 
 api = Flask(__name__)
 
 # Configuring MLflow
 MLFLOW_TRACKING_URI = "https://mlflow-jedha-app-ac2b4eb7451e.herokuapp.com/"
 MODEL_RUN_ID = "a92f4cdbbf1c42468531275f4a8556d3"
+
+# Configuring AWS
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+region_name= os.getenv("AWS_DEFAULT_REGION")
+
+
+s3 = boto3.client(
+    's3',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+    region_name=region_name
+    
+    
+)
 
 UPLOAD_FOLDER = "src/upload"
 if not os.path.exists(UPLOAD_FOLDER):
