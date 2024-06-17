@@ -1,4 +1,4 @@
-Environnement virtuel
+Virtual environnement
 
 python -m venv mon_env
 
