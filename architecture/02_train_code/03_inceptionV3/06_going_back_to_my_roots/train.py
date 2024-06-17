@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import math
 import random
 import mlflow
 import datetime
@@ -41,7 +42,7 @@ k_DataDir = "../data/train"
 k_NbClasses = 24
 k_L2 = 0.01
 k_BatchSize = 64
-k_Epochs = 50  # 25, 2 to debug, 8 to go fast...
+k_Epochs = 25  # 25, 2 to debug, 8 to go fast...
 # k_StepsPerEpoch = 20  # len(dataset)//batch_size
 k_LearningRate = 0.001
 k_RelativePath = "skin_check"
@@ -106,9 +107,9 @@ class ModelTrainer:
         )
         shuffle_data(img_generator_flow_train)
 
-        # Map class indices to class names
-        class_indices = img_generator_flow_train.class_indices
-        self.indices_to_class = {v: k for k, v in class_indices.items()}
+        # Map class indices to class names (will usefull whith the confusion matrix)
+        # class_indices = img_generator_flow_train.class_indices
+        # self.indices_to_class = {v: k for k, v in class_indices.items()}
 
         # Flow from directory for validation data
         img_generator_flow_validation = img_generator.flow_from_directory(
@@ -265,9 +266,10 @@ class ModelTrainer:
             img_generator_flow_train,
             validation_data=img_generator_flow_validation,
             # steps_per_epoch=k_StepsPerEpoch,
-            steps_per_epoch=nb_image_train // k_BatchSize,
+            # steps_per_epoch=nb_image_train // k_BatchSize,
+            steps_per_epoch=math.ceil(nb_image_train / k_BatchSize),
             epochs=k_Epochs,
-            callbacks=[early_stopping],
+            # callbacks=[early_stopping],
         )
         mlflow.log_metric("train_model_time", round(time.time() - start_time, 2))
         return model
