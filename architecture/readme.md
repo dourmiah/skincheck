@@ -4,19 +4,21 @@ There are 3 main directories :
 
 1. ##  mlflow_tracking_server directory : 
     * To build and deploy mlflow tracking server on Heroku
+
 1. ##  images for models trainers directory : 
-    * most of the model training code run into docker images
-    * there are 3 images in 3 differents directories because the training code can be based on sklearn, tensorflow, tensorflow with GPU support
-    * yes, there is a 4th directory named `tensorflow trainer v2`. At the time of writing it is a specific image which includes tools that help to display the inner content of InceptionV3. Forget this directory.
+    * Most of the model training code run into Docker images
+    * There are 3 images in 3 differents directories because the training code can be based on sklearn, tensorflow, tensorflow with GPU support
+    * Yes, there is a 4th directory named `tensorflow trainer v2`. At the time of writing it is a specific image which includes tools that help to display the inner content of InceptionV3. Forget this directory.
     * Each of the image requires a specific configuration described mostly in the `requirements.txt` file which is available in each directory.
     * For example, `tensorflow_trainer_v2` add `pydot` and `graphiz` support to tensorflow_trainer image. 
         * Used to draw and understand how layers are organized in inceptionV3 and determinse which layer to unfreeze
         * see `architecture\02_train_code\03_inceptionV3\04_unfreeze_layers`
-    * each directory include a "build_blablabla.ps1" which should be invoked from a terminal in the current  directory
-    * My recommendation : if you need to modify some parameters of the command line etc. Modify the `build_xxx.ps1` script. On the long run it is more effective to use a script rather than to remember which specific options goes with which configuration.
+    * Each directory include a "build_blablabla.ps1" which should be invoked from a terminal in the current  directory
+    * **My recommendation** : if you need to modify some parameters of the command line etc. Modify the `build_xxx.ps1` script. On the long run it is more effective to use a script rather than to remember which specific options goes with which configuration.
+
 1. ## train_code directory : 
-    * there are 3 directories, each of them hosting training code based on skelearn, tensorflow or reusing inceptionV3 (tensorflow)
-    * templates directory (the 4th directory) contains step by step instructions on how to create your own training code
+    * There are 3 directories, each of them hosting training code based on skelearn, tensorflow or reusing inceptionV3 (tensorflow)
+    * Templates directory (the 4th directory) contains step by step instructions on how to create your own training code
     * Each of the 3 first directories contains a run_experiment.ps1 that should be invoked for the current directory in a terminal
     * Read the script, but basically :
         * it first invoque secrets.ps1 in order to set the required environment variables
@@ -38,6 +40,6 @@ There are 3 main directories :
 1. ## data_24 directory : 
     * 24 classes
     * This directory should be added to your `.gitignore`
-    * no spaces in names, the word "photos" is removed, " " replace with "_"
-    * see architecture\99_tooling\01_rename_classes
-    * some names are modified "by hand"
+    * No spaces in names, the word "photos" is removed, " " replace with "_"
+    * See architecture\99_tooling\01_rename_classes
+    * Some names are modified "by hand"
