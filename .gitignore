@@ -2,37 +2,26 @@
 secrets.ps1
 *.pem
 secrets.sh
+*.pem
+./aws
+
+*.log
 
 __pycache__/
 *.pyc
-*.pem
 
-
-# Ignorer l'environnement virtuel
-venv/
-env/
-env2/
-
-# Ignorer les fichiers de cache Python
-__pycache__/
-*.py[cod]
-
-# Ignorer les fichiers de logs
-*.log
-
-# Ignorer les fichiers de configuration spécifiques à l'IDE
-.vscode/
-.idea/
-
-# Ignorer les fichiers de dépendances
-*.egg-info/
-
-
-photos_test/
-data_4/
+tmp/
 data_24/
-# test
+data_4/
+photos_test/
 
-
-webapp_API/my_app/.env
-
+# Pour info :
+#       Retrouver la taille du répertoire projet - github 5GB max
+#       (Get-ChildItem . -Recurse | Measure-Object -Property Length -sum).sum/1GB
+#
+#       Large files Size > 100MB (warning à 50MB)
+#       Pas moyen de spécifier la taille dans .gitignore
+#       Get-ChildItem ./ -recurse | where-object {$_.length -gt 100000000} | Sort-Object length | ft fullname, length -auto
+# 
+#       Find out where are the png files
+#       Get-ChildItem -Path . -Filter *.png -Recurse | Select-Object -ExpandProperty FullName

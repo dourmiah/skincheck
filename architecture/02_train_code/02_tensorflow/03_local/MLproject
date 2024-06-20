@@ -1,0 +1,20 @@
+# Identifies the global project in the context of MLflow Projects. 
+# Used to organize the configurations and dependencies required to run the project.
+name: californian_housing_market 
+
+docker_env:
+  image: skincheck_trainer_tf
+  volumes: ["%cd%:/home/app"]
+  environment: [ 
+      "MLFLOW_TRACKING_URI", 
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+    ]
+    
+entry_points:
+  main:
+    parameters:
+      epochs: {type: int, default: 5} 
+      batch_size: {type: int, default: 1000} 
+    command: "python train.py --epochs {epochs} --batch_size {batch_size}" 
+
