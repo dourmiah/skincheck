@@ -88,9 +88,7 @@ class ModelTrainer:
         start_time = time.time()
 
         # This is where we split between train & validation.
-        img_generator = tf.keras.preprocessing.image.ImageDataGenerator(
-            rescale=1.0 / 255, validation_split=0.3
-        )
+        img_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1.0 / 255, validation_split=0.3)
 
         # TODO : should it be a parameter?
         train_data_dir = k_DataDir
@@ -366,9 +364,7 @@ class ModelTrainer:
 
         plt.figure()
         plt.plot(history_dict["categorical_accuracy"], c="r", label="Train Accuracy")
-        plt.plot(
-            history_dict["val_categorical_accuracy"], c="b", label="Validation Accuracy"
-        )
+        plt.plot(history_dict["val_categorical_accuracy"], c="b", label="Validation Accuracy")
         plt.legend()
         plt.title("Accuracy vs epochs")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -466,19 +462,13 @@ class ModelTrainer:
         with mlflow.start_run():
             total_start_time = time.time()
             # self.load_data()                            # not needed with this model
-            img_generator_flow_train, img_generator_flow_validation = (
-                self.preprocess_data()
-            )
+            img_generator_flow_train, img_generator_flow_validation = self.preprocess_data()
             self.log_tags_parameters()
             model = self.build_model()
-            model = self.train_model(
-                model, img_generator_flow_train, img_generator_flow_validation
-            )
+            model = self.train_model(model, img_generator_flow_train, img_generator_flow_validation)
             self.evaluate_model(model, img_generator_flow_validation)
             self.log_model(model, img_generator_flow_train)
-            mlflow.log_metric(
-                "total_run_time", round(time.time() - total_start_time, 2)
-            )
+            mlflow.log_metric("total_run_time", round(time.time() - total_start_time, 2))
 
 
 # -----------------------------------------------------------------------------

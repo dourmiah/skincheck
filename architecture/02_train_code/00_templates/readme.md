@@ -71,6 +71,15 @@ There are 4 files:
 * `secrets.ps1`
     * **DON'T TOUCH**
     * It is very important that `secrets.ps1` is in your the `.gitignore`. Double check it **NOW** !
+    * Typically the content should look like this : 
+    
+```
+$env:MLFLOW_EXPERIMENT_NAME = "SkinCheck-TF-20240612"
+$env:MLFLOW_TRACKING_URI    = "https://skincheck-tracking-server-6e98556bcc6b.herokuapp.com/"
+$env:AWS_ACCESS_KEY_ID      = "YOUR_PSSWD"
+$env:AWS_SECRET_ACCESS_KEY  = "YOUR_PSSWD"
+
+```    
 * `train.py`
     * This is the code that:
         * Retrieves the data from the S3 bucket if needed
