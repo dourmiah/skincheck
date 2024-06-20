@@ -50,9 +50,7 @@ if __name__ == "__main__":
             ("standard_scaler", StandardScaler()),
             (
                 "Regressor",
-                RandomForestRegressor(
-                    n_estimators=n_estimators, min_samples_split=min_samples_split
-                ),
+                RandomForestRegressor(n_estimators=n_estimators, min_samples_split=min_samples_split),
             ),
         ]
     )
