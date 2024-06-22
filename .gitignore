@@ -16,7 +16,7 @@ data_4/
 photos_test/
 
 .env
-.ven
+.venv
 
 # Pour info :
 #       Retrouver la taille du répertoire projet - github 5GB max
