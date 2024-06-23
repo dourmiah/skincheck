@@ -1,4 +1,4 @@
-Virtual environnement
+#Virtual environnement
 
 python -m venv mon_env
 
@@ -6,7 +6,7 @@ env\Scripts\activate
 
 deactivate
 
-Optional
+#Optional
 //used to change the user preference for the PowerShell script execution policy
 
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass

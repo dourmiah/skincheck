@@ -1,4 +1,4 @@
-Install
+#Install
 
 pip install Flask
 python.exe -m pip install --upgrade pip
@@ -10,12 +10,3 @@ pip install tensorflow==2.16.1
 pip install joblib
 pip install mlflow
 pip install boto3
-
-Install AWS CLI
-Configure AWS CLI
-
-$ aws configure
-AWS Access Key ID [None]: YOUR_ACCESS_KEY
-AWS Secret Access Key [None]: YOUR_SECRET_KEY
-Default region name [None]: us-east-1
-Default output format [None]: json
