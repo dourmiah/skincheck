@@ -1,0 +1,19 @@
+#config 
+
+#local :
+Install AWS CLI
+Configure AWS CLI
+
+$ aws configure
+AWS Access Key ID [None]: YOUR_ACCESS_KEY
+AWS Secret Access Key [None]: YOUR_SECRET_KEY
+Default region name [None]: us-east-1
+Default output format [None]: json
+
+#or create file .env with : 
+
+APP_URL=http://localhost:5000/
+API_URL=http://localhost:5001/
+AWS_ACCESS_KEY_ID="YOUR_ACCESS_KEY"
+AWS_SECRET_ACCESS_KEY="YOUR_SECRET_KEY"
+AWS_DEFAULT_REGION="eu-west-3"
