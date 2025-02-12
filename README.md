@@ -1,3 +1,3 @@
-# skin_project
+Objectif : Développer une application mobile capable de détecter et identifier des maladies de la peau.
 
-Lien vers les données : https://drive.google.com/drive/folders/1T9PUISWKd0SjyDI6zbd2wSA3XZrRPKUV?usp=sharing
+\***\* Les services mentionnés ci-dessus ont été développés à des fins d'apprentissage dans le cadre d'une formation \*\*** \***\* Ils sont aujourd'hui désactivés, mais peuvent tout à fait être redémarrés moyennant certains paramétrages. \*\***
